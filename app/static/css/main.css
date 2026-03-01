@@ -741,7 +741,9 @@ body.is-offline .offline-banner { display: flex; }
   .metrics-grid { grid-template-columns: 1fr 1fr; gap: var(--space-md); }
   .health-overview { grid-template-columns: 1fr 1fr; }
   .hero-header { flex-direction: row; align-items: flex-start; justify-content: space-between; }
-  .hero-right { justify-content: flex-end; }
+  .hero-status { flex: 1; min-width: 0; }
+  .hero-right { flex-shrink: 0; justify-content: flex-end; }
+  .hero-meta { flex-wrap: nowrap; }
   .hero-title { font-size: 1.4rem; }
   .hero-chart-wrap { height: 120px; }
   .hero-card { padding: var(--space-lg); }
