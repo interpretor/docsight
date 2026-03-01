@@ -60,24 +60,24 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| GDRV-01 | — | Pending |
-| GDRV-02 | — | Pending |
-| GDRV-03 | — | Pending |
-| GDRV-04 | — | Pending |
-| MDRV-01 | — | Pending |
-| MDRV-02 | — | Pending |
-| MDRV-03 | — | Pending |
-| MDRV-04 | — | Pending |
-| MDRV-05 | — | Pending |
-| DVAL-01 | — | Pending |
-| DVAL-02 | — | Pending |
-| DVAL-03 | — | Pending |
+| GDRV-01 | Phase 1 | Pending |
+| GDRV-02 | Phase 1 | Pending |
+| GDRV-03 | Phase 1 | Pending |
+| GDRV-04 | Phase 1 | Pending |
+| MDRV-01 | Phase 1 | Pending |
+| MDRV-02 | Phase 1 | Pending |
+| MDRV-03 | Phase 1 | Pending |
+| MDRV-04 | Phase 1 | Pending |
+| MDRV-05 | Phase 1 | Pending |
+| DVAL-01 | Phase 2 | Pending |
+| DVAL-02 | Phase 2 | Pending |
+| DVAL-03 | Phase 2 | Pending |
 
 **Coverage:**
 - v1 requirements: 12 total
-- Mapped to phases: 0
-- Unmapped: 12
+- Mapped to phases: 12
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-01*
-*Last updated: 2026-03-01 after initial definition*
+*Last updated: 2026-03-01 after roadmap creation — all 12 v1 requirements mapped*
