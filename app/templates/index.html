@@ -2037,21 +2037,32 @@ var T = {{ t|tojson }};
 
     /* Swipe-to-close sidebar (mobile) */
     (function() {
-        var startX = 0, currentX = 0, swiping = false;
+        var startX = 0, startY = 0, currentX = 0, swiping = false, locked = false;
         sidebar.addEventListener('touchstart', function(e) {
+            if (!isMobile()) return;
             startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            currentX = startX;
             swiping = true;
+            locked = false;
         }, { passive: true });
         sidebar.addEventListener('touchmove', function(e) {
             if (!swiping) return;
             currentX = e.touches[0].clientX;
             var dx = currentX - startX;
-            if (dx < -10) {
+            var dy = e.touches[0].clientY - startY;
+            /* Lock direction on first significant movement */
+            if (!locked && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+                locked = true;
+                /* If vertical movement dominates, cancel swipe */
+                if (Math.abs(dy) > Math.abs(dx)) { swiping = false; return; }
+            }
+            if (locked && dx < -10) {
                 sidebar.style.transform = 'translateX(' + Math.max(dx, -280) + 'px)';
             }
         }, { passive: true });
         sidebar.addEventListener('touchend', function() {
-            if (!swiping) return;
+            if (!swiping) { sidebar.style.transform = ''; return; }
             swiping = false;
             var dx = currentX - startX;
             if (dx < -80) { closeSidebar(); }
