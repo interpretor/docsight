@@ -485,7 +485,7 @@
                 <div class="ring-title">{{ t.downstream }}</div>
                 <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:var(--space-xs);">{{ ds_total }} {{ t.channels }}</div>
                 <div class="ring-legend">
-                    <div class="ring-legend-item"><span class="ring-legend-dot" style="background:var(--good);"></span> {{ health_labels.good }} <span class="ring-legend-count" style="color:var(--good);">{{ ds_good }}</span></div>
+                    <div class="ring-legend-item"><span class="ring-legend-dot" style="background:var(--good);"></span> {{ health_labels.good }} <span class="ring-legend-count" style="color:{{ 'var(--good)' if ds_good > 0 else 'var(--text-muted)' }};">{{ ds_good }}</span></div>
                     <div class="ring-legend-item"><span class="ring-legend-dot" style="background:var(--warn);"></span> {{ health_labels.warn }} <span class="ring-legend-count" style="color:{{ 'var(--warn)' if ds_warn > 0 else 'var(--text-muted)' }};">{{ ds_warn }}</span></div>
                     <div class="ring-legend-item"><span class="ring-legend-dot" style="background:var(--crit);"></span> {{ health_labels.crit }} <span class="ring-legend-count" style="color:{{ 'var(--crit)' if ds_crit > 0 else 'var(--text-muted)' }};">{{ ds_crit }}</span></div>
                 </div>
@@ -505,7 +505,7 @@
                 <div class="ring-title">{{ t.upstream }}</div>
                 <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:var(--space-xs);">{{ us_total }} {{ t.channels }}</div>
                 <div class="ring-legend">
-                    <div class="ring-legend-item"><span class="ring-legend-dot" style="background:var(--good);"></span> {{ health_labels.good }} <span class="ring-legend-count" style="color:var(--good);">{{ us_good_c }}</span></div>
+                    <div class="ring-legend-item"><span class="ring-legend-dot" style="background:var(--good);"></span> {{ health_labels.good }} <span class="ring-legend-count" style="color:{{ 'var(--good)' if us_good_c > 0 else 'var(--text-muted)' }};">{{ us_good_c }}</span></div>
                     <div class="ring-legend-item"><span class="ring-legend-dot" style="background:var(--warn);"></span> {{ health_labels.warn }} <span class="ring-legend-count" style="color:{{ 'var(--warn)' if us_warn_c > 0 else 'var(--text-muted)' }};">{{ us_warn_c }}</span></div>
                     <div class="ring-legend-item"><span class="ring-legend-dot" style="background:var(--crit);"></span> {{ health_labels.crit }} <span class="ring-legend-count" style="color:{{ 'var(--crit)' if us_crit_c > 0 else 'var(--text-muted)' }};">{{ us_crit_c }}</span></div>
                 </div>
