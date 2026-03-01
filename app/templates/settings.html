@@ -2,16 +2,19 @@
 <html lang="{{ lang }}" data-theme="{{ theme }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#06080f">
     <title>DOCSight - {{ t.settings }}</title>
     <link rel="icon" type="image/svg+xml" href="/static/logo.svg">
-    <link rel="icon" type="image/png" href="/static/icon.png">
     <link rel="apple-touch-icon" href="/static/icon.png">
     <link rel="manifest" href="/static/manifest.json">
-    <meta name="theme-color" content="#7c3aed">
-    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tokens.css">
+    <link rel="stylesheet" href="/static/css/components.css">
     <link rel="stylesheet" href="/static/css/settings.css">
-    {% for mod in modules if mod.has_css %}
+    {% for mod in modules|sort(attribute='menu.order') if mod.has_css %}
     <link rel="stylesheet" href="/modules/{{ mod.id }}/static/style.css">
     {% endfor %}
     {% if active_theme_data %}

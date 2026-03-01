@@ -84,6 +84,10 @@
   --input-border: var(--glass-border);
   --overlay: rgba(0,0,0,0.6);
   --hover-bg: var(--hover);
+  --muted: var(--text-muted);
+  --card-bg: var(--surface);
+  --border: var(--glass-border);
+  --primary: var(--amethyst);
 }
 
 /* ── Color Palette: Light ── */
