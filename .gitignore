@@ -30,3 +30,7 @@ mockup*.png
 *~
 .claude/
 .worktrees/
+
+# GSD planning (tracked)
+!.planning/
+!.planning/**
