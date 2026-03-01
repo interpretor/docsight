@@ -106,9 +106,10 @@ Open `http://localhost:8765` — no setup required.
 | **Notifications** | Alerts via webhook, ntfy, Discord, Gotify, and custom endpoints |
 | **[LLM Export](https://github.com/itsDNNS/docsight/wiki/Features-LLM-Export)** | Structured reports for AI analysis |
 | **[Demo Mode](https://github.com/itsDNNS/docsight/wiki/Features-Demo-Mode)** | Try DOCSight without a router — 9 months of simulated data with live migration |
+| **[Theme Engine](https://github.com/itsDNNS/docsight/wiki/Themes)** | **NEW:** 3 built-in themes (Classic, Ocean, Tribu) with live preview, instant switching, and community theme registry |
 | **[Community Modules](https://github.com/itsDNNS/docsight-modules)** | Extend DOCSight with community-built modules — data collectors, integrations, analysis tools, and themes |
 
-4 languages (EN/DE/FR/ES) · Light/Dark mode · Setup wizard · Optional authentication · API token auth for external clients
+4 languages (EN/DE/FR/ES) · Light/Dark mode · Themes · PWA/Offline · Setup wizard · Optional authentication · API token auth for external clients
 
 ---
 
@@ -141,9 +142,9 @@ Open `http://localhost:8765` — no setup required.
 |---|---|
 | ![Correlation](docs/screenshots/correlation.png) | ![Settings](docs/screenshots/settings.png) |
 
-| BQM Integration | |
+| Theme Gallery | BQM Integration |
 |---|---|
-| ![BQM](docs/screenshots/bqm.png) | |
+| ![Themes](docs/screenshots/themes.png) | ![BQM](docs/screenshots/bqm.png) |
 
 </details>
 
@@ -266,12 +267,18 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). **Please open an issue before working on
 | Module System | ✅ Released | [#128](https://github.com/itsDNNS/docsight/issues/128) |
 | Community Module Registry | ✅ Released | [#127](https://github.com/itsDNNS/docsight/issues/127) |
 | Regional Threshold Profiles | ✅ Released | [#130](https://github.com/itsDNNS/docsight/issues/130) |
+| Settings Redesign (Tribu Design) | ✅ Released | [#104](https://github.com/itsDNNS/docsight/issues/104) |
+| Theme Engine (Themes as Modules) | ✅ Released | — |
+| Dashboard Redesign (Mobile-First PWA) | ✅ Released | [#105](https://github.com/itsDNNS/docsight/issues/105) |
+| Self-Hosted Dependencies (Offline) | ✅ Released | — |
 
 **Planned:**
 
 | Feature | Issue |
 |---|---|
 | Before/After Comparison | [#50](https://github.com/itsDNNS/docsight/issues/50) |
+| Community Modem Drivers | [#131](https://github.com/itsDNNS/docsight/issues/131) |
+| Non-DOCSIS Router Support | [#129](https://github.com/itsDNNS/docsight/issues/129) |
 
 See the **[full roadmap](https://github.com/itsDNNS/docsight/wiki/Roadmap)** in the wiki for long-term goals and modem support plans.
 
@@ -288,7 +295,7 @@ If DOCSight helps you, you can support development here:
 
 ## Documentation
 
-Documentation current as of **v2026-02-28.6**.
+Documentation current as of **v2026-03-01.1**.
 
 | Document | Scope |
 |---|---|
