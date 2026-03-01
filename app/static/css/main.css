@@ -206,6 +206,7 @@
 .dark-toggle {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-sm);
   padding: var(--space-sm) 0;
   margin-bottom: var(--space-sm);
