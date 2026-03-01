@@ -43,89 +43,106 @@
 <body>
 <div class="app-layout">
 
+<!-- Mobile Header -->
+<header class="mobile-header">
+    <button class="hamburger" id="hamburger" onclick="openSidebar()" aria-label="Menu">
+        <i data-lucide="menu"></i>
+    </button>
+    <span class="mobile-header-title">DOCSight</span>
+    <div class="mobile-header-status">
+        <span id="topbar-meta">{% if last_update %}{{ last_update }}{% endif %}</span>
+        <span id="topbar-countdown"></span>
+        <button class="hamburger" id="refresh-btn" title="{{ t.refresh }}" style="min-width:36px;min-height:36px;padding:4px;">
+            <i data-lucide="refresh-cw" style="width:16px;height:16px;"></i>
+        </button>
+    </div>
+</header>
+
 <!-- Sidebar -->
 <nav class="sidebar" id="sidebar">
     <div class="sidebar-header">
-        <img src="/static/logo.svg" alt="DOCSight" style="width:36px;height:36px;vertical-align:middle;margin-right:8px;">
-        <span>DOCSight</span>
-        <button class="sidebar-toggle" id="sidebar-collapse" title="Collapse"></button>
+        <div class="sidebar-logo"><i data-lucide="radio" style="width:18px;height:18px;color:#fff;"></i></div>
+        <div>
+            <div class="sidebar-title">DOCSight</div>
+            <div class="sidebar-subtitle">{{ t.sidebar_monitoring }}</div>
+        </div>
     </div>
     <div class="sidebar-content">
-        <div class="sidebar-section-label">{{ t.sidebar_monitoring }}</div>
-        <a class="sidebar-link active" data-view="live" data-tooltip="{{ t.live_dashboard }}">
-            <span class="icon"><i data-lucide="radio"></i></span> {{ t.live_dashboard }}
+        <div class="nav-group-label">{{ t.sidebar_monitoring }}</div>
+        <a class="nav-item active" data-view="live">
+            <i data-lucide="radio"></i> {{ t.live_dashboard }}
         </a>
-        <a class="sidebar-link" data-view="events" data-tooltip="{{ t.event_log }}">
-            <span class="icon"><i data-lucide="bell"></i></span> {{ t.event_log }}
-            <span class="event-badge" id="event-badge" style="display:none;"></span>
+        <a class="nav-item" data-view="events">
+            <i data-lucide="bell"></i> {{ t.event_log }}
+            <span class="nav-badge" id="event-badge" style="display:none;"></span>
         </a>
-        <a class="sidebar-link" data-view="trends" data-tooltip="{{ t.signal_trends }}">
-            <span class="icon"><i data-lucide="trending-up"></i></span> {{ t.signal_trends }}
+        <a class="nav-item" data-view="trends">
+            <i data-lucide="trending-up"></i> {{ t.signal_trends }}
         </a>
-        <a class="sidebar-link" data-view="channels" data-tooltip="{{ t.channels }}">
-            <span class="icon"><i data-lucide="clock"></i></span> {{ t.channels }}
+        <a class="nav-item" data-view="channels">
+            <i data-lucide="layers"></i> {{ t.channels }}
         </a>
         {% if speedtest_configured or bqm_configured %}
-        <a class="sidebar-link" data-view="correlation" data-tooltip="{{ t.correlation_analysis }}">
-            <span class="icon"><i data-lucide="bar-chart-3"></i></span> {{ t.correlation_analysis }}
+        <a class="nav-item" data-view="correlation">
+            <i data-lucide="bar-chart-3"></i> {{ t.correlation_analysis }}
         </a>
         {% endif %}
         {% if gaming_quality_enabled %}
-        <a class="sidebar-link" data-view="gaming" data-tooltip="{{ t.gaming_quality_label }}">
-            <span class="icon"><i data-lucide="gamepad-2"></i></span> {{ t.gaming_quality_label }}
+        <a class="nav-item" data-view="gaming">
+            <i data-lucide="gamepad-2"></i> {{ t.gaming_quality_label }}
         </a>
         {% endif %}
-        <div class="sidebar-section-label">{{ t.sidebar_external }}</div>
+        <div class="nav-group-label">{{ t.sidebar_external }}</div>
         {% if modules|selectattr('id', 'equalto', 'docsight.speedtest')|list %}
         {% if speedtest_configured %}
-        <a class="sidebar-link" data-view="speedtest" data-tooltip="{{ t.speedtest }}">
-            <span class="icon"><i data-lucide="rabbit"></i></span> {{ t.speedtest }}
+        <a class="nav-item" data-view="speedtest">
+            <i data-lucide="rabbit"></i> {{ t.speedtest }}
         </a>
         {% else %}
-        <a class="sidebar-link" onclick="openSpeedtestSetupModal()" data-tooltip="{{ t.speedtest_setup }}">
-            <span class="icon"><i data-lucide="settings"></i></span> {{ t.speedtest_setup }}
+        <a class="nav-item" onclick="openSpeedtestSetupModal()">
+            <i data-lucide="settings"></i> {{ t.speedtest_setup }}
         </a>
         {% endif %}
         {% endif %}
         {% if modules|selectattr('id', 'equalto', 'docsight.bqm')|list %}
         {% if bqm_configured %}
-        <a class="sidebar-link" data-view="bqm" data-tooltip="{{ t.bqm_title }}">
-            <span class="icon"><i data-lucide="activity"></i></span> {{ t.bqm_title }}
+        <a class="nav-item" data-view="bqm">
+            <i data-lucide="activity"></i> {{ t.bqm_title }}
         </a>
         {% else %}
-        <a class="sidebar-link" onclick="openBqmSetupModal()" data-tooltip="{{ t.bqm_setup }}">
-            <span class="icon"><i data-lucide="settings"></i></span> {{ t.bqm_setup }}
+        <a class="nav-item" onclick="openBqmSetupModal()">
+            <i data-lucide="settings"></i> {{ t.bqm_setup }}
         </a>
         {% endif %}
         {% endif %}
         {% if modules|selectattr('id', 'equalto', 'docsight.smokeping')|list %}
         {% if smokeping_configured %}
-        <a class="sidebar-link" data-view="smokeping" data-tooltip="{{ t.smokeping_title }}">
-            <span class="icon"><i data-lucide="radar"></i></span> {{ t.smokeping_title }}
+        <a class="nav-item" data-view="smokeping">
+            <i data-lucide="radar"></i> {{ t.smokeping_title }}
         </a>
         {% else %}
-        <a class="sidebar-link" onclick="openSmokepingSetupModal()" data-tooltip="{{ t.smokeping_setup }}">
-            <span class="icon"><i data-lucide="settings"></i></span> {{ t.smokeping_setup }}
+        <a class="nav-item" onclick="openSmokepingSetupModal()">
+            <i data-lucide="settings"></i> {{ t.smokeping_setup }}
         </a>
         {% endif %}
         {% endif %}
         {% if bnetz_enabled and modules|selectattr('id', 'equalto', 'docsight.bnetz')|list %}
-        <a class="sidebar-link" data-view="bnetz" data-tooltip="{{ t.bnetz_title }}">
-            <span class="icon"><i data-lucide="file-check"></i></span> {{ t.bnetz_title }}
+        <a class="nav-item" data-view="bnetz">
+            <i data-lucide="file-check"></i> {{ t.bnetz_title }}
         </a>
         {% endif %}
-        <div class="sidebar-section-label">{{ t.sidebar_documentation }}</div>
+        <div class="nav-group-label">{{ t.sidebar_documentation }}</div>
         {% if modules|selectattr('id', 'equalto', 'docsight.journal')|list %}
-        <a class="sidebar-link" data-view="journal" data-tooltip="{{ t.incident_journal }}">
-            <span class="icon"><i data-lucide="clipboard-list"></i></span> {{ t.incident_journal }}
+        <a class="nav-item" data-view="journal">
+            <i data-lucide="clipboard-list"></i> {{ t.incident_journal }}
         </a>
         {% endif %}
-        <a class="sidebar-link" id="export-link" href="javascript:void(0)" onclick="exportForLLM()" data-tooltip="{{ t.export_llm }}">
-            <span class="icon"><i data-lucide="file-output"></i></span> {{ t.export_llm }}
+        <a class="nav-item" id="export-link" href="javascript:void(0)" onclick="exportForLLM()">
+            <i data-lucide="file-output"></i> {{ t.export_llm }}
         </a>
         {% if modules|selectattr('id', 'equalto', 'docsight.reports')|list %}
-        <a class="sidebar-link" id="report-link" href="javascript:void(0)" onclick="openReportModal()" data-tooltip="{{ t.incident_report }}">
-            <span class="icon"><i data-lucide="file-text"></i></span> {{ t.incident_report }}
+        <a class="nav-item" id="report-link" href="javascript:void(0)" onclick="openReportModal()">
+            <i data-lucide="file-text"></i> {{ t.incident_report }}
         </a>
         {% endif %}
         {% set tab_modules = [] %}
@@ -133,75 +150,60 @@
             {% if tab_modules.append(mod) %}{% endif %}
         {% endfor %}
         {% if tab_modules %}
-        <div class="sidebar-section-label">{{ t.sidebar_extensions }}</div>
+        <div class="nav-group-label">{{ t.sidebar_extensions }}</div>
         {% for mod in tab_modules|sort(attribute='menu.order') %}
-        <a class="sidebar-link" data-view="mod-{{ mod.id|replace('.', '-') }}" data-tooltip="{{ t.get(mod.menu.label_key, mod.name) }}">
-            <span class="icon"><i data-lucide="{{ mod.menu.get('icon', 'puzzle') }}"></i></span>
+        <a class="nav-item" data-view="mod-{{ mod.id|replace('.', '-') }}">
+            <i data-lucide="{{ mod.menu.get('icon', 'puzzle') }}"></i>
             {{ t.get(mod.menu.label_key, mod.name) }}
         </a>
         {% endfor %}
         {% endif %}
         <div style="flex:1;"></div>
-        <div class="sidebar-divider"></div>
-        <a class="sidebar-link" href="/settings" data-tooltip="{{ t.settings }}">
-            <span class="icon"><i data-lucide="settings"></i></span> {{ t.settings }}
+        <a class="nav-item" href="/settings">
+            <i data-lucide="settings"></i> {{ t.settings }}
         </a>
         {% if auth_enabled %}
-        <a class="sidebar-link" href="/logout">
-            <span class="icon"><i data-lucide="log-out"></i></span> {{ t.logout }}
+        <a class="nav-item" href="/logout">
+            <i data-lucide="log-out"></i> {{ t.logout }}
         </a>
         {% endif %}
-        <div class="sidebar-footer">
-            <div class="dark-mode-toggle">
-                <span class="dark-mode-label"><i data-lucide="moon"></i> {{ t.dark_mode or 'Dark mode' }}</span>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="theme-toggle-sidebar">
-                    <span class="toggle-slider"></span>
-                </label>
-            </div>
-            <div class="sidebar-version-row">
-                <a href="https://github.com/itsDNNS/docsight/releases" target="_blank" class="version-link">
-                    {{ version }}
-                    {% if update_available %}
-                    <span class="update-badge" title="{{ update_available }}">Update</span>
-                    {% endif %}
+    </div>
+    <div class="sidebar-footer">
+        <div class="dark-toggle">
+            <span class="dark-toggle-label"><i data-lucide="moon"></i> {{ t.dark_mode or 'Dark Mode' }}</span>
+            <label class="toggle">
+                <input type="checkbox" id="theme-toggle-sidebar">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+        <div class="sidebar-footer-row">
+            <a href="https://github.com/itsDNNS/docsight/releases" target="_blank">
+                {{ version }}
+                {% if update_available %}
+                <span class="update-badge" title="{{ update_available }}">Update</span>
+                {% endif %}
+            </a>
+            <div class="sidebar-icons">
+                <a href="https://github.com/itsDNNS/docsight/issues" target="_blank" rel="noopener noreferrer" title="Report a bug">
+                    <i data-lucide="bug"></i>
                 </a>
-                <div class="sidebar-links-row">
-                    <a href="https://github.com/itsDNNS/docsight/issues" target="_blank" rel="noopener noreferrer" class="sponsor-link" title="Report a bug">
-                        <i data-lucide="bug" style="width:14px;height:14px;"></i>
-                    </a>
-                    <a href="https://paypal.me/itsDNNS" target="_blank" rel="noopener noreferrer" class="sponsor-link" title="Donate via PayPal">
-                        <i data-lucide="wallet" style="width:14px;height:14px;"></i>
-                    </a>
-                    <a href="https://ko-fi.com/itsdnns" target="_blank" rel="noopener noreferrer" class="sponsor-link" title="Support on Ko-fi">
-                        <i data-lucide="coffee" style="width:14px;height:14px;"></i>
-                    </a>
-                    <a href="https://github.com/sponsors/itsDNNS" target="_blank" rel="noopener noreferrer" class="sponsor-link" title="Support on GitHub Sponsors">
-                        <i data-lucide="heart" style="width:14px;height:14px;"></i>
-                    </a>
-                </div>
+                <a href="https://paypal.me/itsDNNS" target="_blank" rel="noopener noreferrer" title="Donate via PayPal">
+                    <i data-lucide="wallet"></i>
+                </a>
+                <a href="https://ko-fi.com/itsdnns" target="_blank" rel="noopener noreferrer" title="Support on Ko-fi">
+                    <i data-lucide="coffee"></i>
+                </a>
+                <a href="https://github.com/sponsors/itsDNNS" target="_blank" rel="noopener noreferrer" title="Support on GitHub Sponsors">
+                    <i data-lucide="heart"></i>
+                </a>
             </div>
         </div>
     </div>
 </nav>
-<div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+<div class="backdrop" id="sidebar-backdrop" onclick="closeSidebar()"></div>
 
 <!-- Main Area -->
 <div class="app-main">
-
-<!-- Topbar -->
-<div class="topbar">
-    <div class="topbar-left">
-        <button class="hamburger-btn" id="hamburger" title="Menu">&#9776;</button>
-    </div>
-    <div class="topbar-right">
-        <span class="topbar-meta" id="topbar-meta">
-            {% if last_update %}{{ t.last_update }}: {{ last_update }}{% endif %}
-        </span>
-        <span class="topbar-countdown" id="topbar-countdown"></span>
-        <button class="refresh-btn" id="refresh-btn" title="{{ t.refresh }}">&#x1F504;</button>
-    </div>
-</div>
 
 
 <!-- ═══ View: Dashboard ═══ -->
@@ -2139,57 +2141,23 @@ var T = {{ t|tojson }};
     var sidebar = document.getElementById('sidebar');
     var sidebarBackdrop = document.getElementById('sidebar-backdrop');
 
-    function isMobile() { return window.matchMedia('(max-width: 900px)').matches; }
+    function isMobile() { return window.matchMedia('(max-width: 1023px)').matches; }
 
-    function closeMobileSidebar() {
-        sidebar.classList.remove('mobile-open');
-        sidebarBackdrop.classList.remove('active');
-    }
+    window.openSidebar = function() {
+        sidebar.classList.add('open');
+        sidebarBackdrop.style.display = 'block';
+        document.body.classList.add('sidebar-open');
+    };
+    window.closeSidebar = function() {
+        sidebar.classList.remove('open');
+        sidebarBackdrop.style.display = 'none';
+        document.body.classList.remove('sidebar-open');
+    };
 
-    function collapseSidebar() {
-        if (isMobile()) {
-            closeMobileSidebar();
-        } else {
-            sidebar.classList.add('collapsed');
-            sidebar.classList.remove('mobile-open');
-            sidebarBackdrop.classList.remove('active');
-            var btn = document.getElementById('sidebar-collapse');
-            btn.innerHTML = '&#10095;'; // Right arrow >
-            btn.title = 'Expand';
-        }
-    }
-    function expandSidebar() {
-        sidebar.classList.remove('collapsed');
-        var btn = document.getElementById('sidebar-collapse');
-        btn.innerHTML = '&#10094;'; // Left arrow <
-        btn.title = 'Collapse';
-    }
-    function toggleSidebar() {
-        if (sidebar.classList.contains('collapsed')) {
-            expandSidebar();
-        } else {
-            collapseSidebar();
-        }
-    }
-
-    document.getElementById('sidebar-collapse').addEventListener('click', toggleSidebar);
-    document.getElementById('hamburger').addEventListener('click', function() {
-        if (isMobile()) {
-            // On mobile, NEVER use .collapsed - always use .mobile-open
-            sidebar.classList.remove('collapsed');
-            var opening = !sidebar.classList.contains('mobile-open');
-            sidebar.classList.toggle('mobile-open', opening);
-            sidebarBackdrop.classList.toggle('active', opening);
-        } else {
-            sidebar.classList.toggle('collapsed');
-        }
-    });
-    sidebarBackdrop.addEventListener('click', closeMobileSidebar);
-
-    var sidebarLinks = document.querySelectorAll('.sidebar-link[data-view]');
+    var sidebarLinks = document.querySelectorAll('.nav-item[data-view]');
     sidebarLinks.forEach(function(link) {
         link.addEventListener('click', function() {
-            if (isMobile()) { closeMobileSidebar(); }
+            if (isMobile()) { closeSidebar(); }
             switchView(this.getAttribute('data-view'));
         });
     });
@@ -2210,6 +2178,13 @@ var T = {{ t|tojson }};
         if (!skipHash) location.hash = view === 'live' ? '' : view;
         sidebarLinks.forEach(function(l) {
             l.classList.toggle('active', l.getAttribute('data-view') === view);
+        });
+        // Update bottom nav active state
+        document.querySelectorAll('.bottom-nav-item').forEach(function(btn) {
+            var match = btn.getAttribute('onclick') || '';
+            var isActive = match.indexOf("'" + view + "'") !== -1;
+            btn.classList.toggle('active', isActive);
+            btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
         });
         // Generic: remove active from all views, add to target
         document.querySelectorAll('.main-content > .view').forEach(function(v) {
@@ -2468,5 +2443,25 @@ var T = {{ t|tojson }};
 {% for mod in modules if mod.has_js %}
 <script src="/modules/{{ mod.id }}/static/main.js"></script>
 {% endfor %}
+
+<!-- Bottom Tab Bar (mobile only, hidden on desktop via CSS) -->
+<nav class="bottom-nav" role="tablist" aria-label="Main tabs">
+    <button class="bottom-nav-item active" role="tab" aria-selected="true" onclick="switchView('live')">
+        <i data-lucide="radio"></i><span>Dashboard</span>
+    </button>
+    <button class="bottom-nav-item" role="tab" aria-selected="false" onclick="switchView('events')">
+        <i data-lucide="bell"></i><span>{{ t.event_log }}</span>
+    </button>
+    <button class="bottom-nav-item" role="tab" aria-selected="false" onclick="switchView('trends')">
+        <i data-lucide="trending-up"></i><span>{{ t.signal_trends }}</span>
+    </button>
+    <button class="bottom-nav-item" role="tab" aria-selected="false" onclick="switchView('channels')">
+        <i data-lucide="layers"></i><span>{{ t.channels }}</span>
+    </button>
+    <button class="bottom-nav-item" role="tab" aria-selected="false" onclick="window.location='/settings'">
+        <i data-lucide="settings"></i><span>{{ t.settings }}</span>
+    </button>
+</nav>
+
 </body>
 </html>
