@@ -365,99 +365,59 @@
     {% endif %}
 
     {# ══════════════════════════════════════════════════════════════════════════
-       METRIC SUMMARY ROW - Phase 3 Task 3.2
-       Compact metric cards: DS, US, Errors, Speed (no expandable details)
+       METRICS GRID — Compact signal + error + speed cards
        ══════════════════════════════════════════════════════════════════════════ #}
-    <div class="metric-summary-row">
-        {# Card 1: Downstream Signal #}
-        <div class="metric-summary-card health-{{ signal_health }}">
-            <div class="metric-summary-header">
-                <i data-lucide="radio" class="metric-icon"></i>
+    <div class="metrics-grid">
+        {# Card 1: Downstream #}
+        <div class="metric-card glass">
+            <div class="metric-header">
                 <span class="metric-label">{{ t.downstream }}</span>
+                <div class="metric-icon purple"><i data-lucide="arrow-down"></i></div>
             </div>
-            <div class="metric-summary-values">
-                <div class="metric-value-item">
-                    <span class="value val-{{ ds_pwr_health }}">{{ s.ds_power_avg }}</span>
-                    <span class="unit">dBmV</span>
-                    <span class="sublabel">Ø {{ t.card_ds_power }}</span>
-                </div>
-                <div class="metric-value-divider"></div>
-                <div class="metric-value-item">
-                    <span class="value val-{{ snr_health }}">{{ s.ds_snr_avg }}</span>
-                    <span class="unit">dB</span>
-                    <span class="sublabel">Ø {{ t.card_snr }}</span>
-                </div>
+            <div class="metric-value" style="color:var(--{{ ds_pwr_health }});">{{ s.ds_power_avg }}<span class="unit">dBmV</span></div>
+            <div class="metric-sub">
+                <span class="badge badge-{{ ds_pwr_health }}">Ø {{ t.card_ds_power }}</span>
+                <span class="range">{{ s.ds_snr_avg }} dB {{ t.card_snr }}</span>
             </div>
         </div>
 
-        {# Card 2: Upstream Signal #}
-        <div class="metric-summary-card health-{{ us_health }}">
-            <div class="metric-summary-header">
-                <i data-lucide="radio" class="metric-icon"></i>
+        {# Card 2: Upstream #}
+        <div class="metric-card glass">
+            <div class="metric-header">
                 <span class="metric-label">{{ t.upstream }}</span>
+                <div class="metric-icon blue"><i data-lucide="arrow-up"></i></div>
             </div>
-            <div class="metric-summary-values">
-                <div class="metric-value-item">
-                    <span class="value val-{{ us_health }}">{{ s.us_power_avg }}</span>
-                    <span class="unit">dBmV</span>
-                    <span class="sublabel">Ø {{ t.card_transmit_power }}</span>
-                </div>
-                {% if s.us_capacity_mbps is not none %}
-                <div class="metric-value-divider"></div>
-                <div class="metric-value-item">
-                    <span class="value val-{{ us_health }}">{{ s.us_capacity_mbps }}</span>
-                    <span class="unit">Mbit/s</span>
-                    <span class="sublabel">{{ t.card_us_capacity or 'Capacity' }}</span>
-                </div>
-                {% endif %}
+            <div class="metric-value" style="color:var(--{{ us_health }});">{{ s.us_power_avg }}<span class="unit">dBmV</span></div>
+            <div class="metric-sub">
+                <span class="badge badge-{{ us_health }}">Ø {{ t.card_transmit_power }}</span>
+                {% if s.us_capacity_mbps is not none %}<span class="range">{{ s.us_capacity_mbps }} Mbit/s</span>{% endif %}
             </div>
         </div>
 
         {# Card 3: Errors #}
-        <div class="metric-summary-card health-{{ error_health }}">
-            <div class="metric-summary-header">
-                <i data-lucide="alert-triangle" class="metric-icon"></i>
+        <div class="metric-card glass">
+            <div class="metric-header">
                 <span class="metric-label">{{ t.card_errors }}</span>
+                <div class="metric-icon amber"><i data-lucide="alert-triangle"></i></div>
             </div>
-            <div class="metric-summary-values">
-                <div class="metric-value-item">
-                    <span class="value val-{{ error_health }}">{{ s.ds_uncorrectable_errors|fmt_k }}</span>
-                    <span class="unit">{{ t.card_uncorr_label }}</span>
-                    <span class="sublabel">{{ s.ds_correctable_errors|fmt_k }} {{ t.card_corr_label }}</span>
-                </div>
+            <div class="metric-value" style="color:var(--{{ error_health }});">{{ s.ds_uncorrectable_errors|fmt_k }}<span class="unit">{{ t.card_uncorr_label }}</span></div>
+            <div class="metric-sub">
+                <span class="badge badge-{{ error_health }}">{{ s.ds_correctable_errors|fmt_k }} {{ t.card_corr_label }}</span>
             </div>
         </div>
 
-        {# Card 4: Speedtest (conditional) #}
+        {# Card 4: Speed (conditional) #}
         {% if speedtest_configured and speedtest_latest %}
-        <div class="metric-summary-card {{ speed_health }}">
-            <div class="metric-summary-header">
-                <i data-lucide="zap" class="metric-icon"></i>
+        <div class="metric-card glass">
+            <div class="metric-header">
                 <span class="metric-label">{{ t.speed }}</span>
+                <div class="metric-icon green"><i data-lucide="zap"></i></div>
             </div>
-            <div class="metric-summary-values" style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;">
-                <div class="metric-value-item">
-                    <span class="value {{ dl_val_class }}">{{ speedtest_latest.download_mbps|fmt_speed_value }}</span>
-                    <span class="unit">{{ speedtest_latest.download_mbps|fmt_speed_unit }}</span>
-                    <span class="sublabel">{{ t.download }}</span>
-                </div>
-                <div class="metric-value-divider"></div>
-                <div class="metric-value-item">
-                    <span class="value {{ ul_val_class }}">{{ speedtest_latest.upload_mbps|fmt_speed_value }}</span>
-                    <span class="unit">{{ speedtest_latest.upload_mbps|fmt_speed_unit }}</span>
-                    <span class="sublabel">{{ t.upload }}</span>
-                </div>
-                <div class="metric-value-item secondary" style="grid-column:1;">
-                    <span class="value">{{ speedtest_latest.ping_ms|round(0)|int }}</span>
-                    <span class="unit">ms</span>
-                    <span class="sublabel">Ping</span>
-                </div>
-                <div class="metric-value-divider"></div>
-                <div class="metric-value-item secondary" style="grid-column:3;">
-                    <span class="value">{{ speedtest_latest.jitter_ms|round(1) }}</span>
-                    <span class="unit">ms</span>
-                    <span class="sublabel">Jitter</span>
-                </div>
+            <div class="metric-value" style="color:var(--{{ dl_val_class|replace('val-','') }});">{{ speedtest_latest.download_mbps|fmt_speed_value }}<span class="unit">{{ speedtest_latest.download_mbps|fmt_speed_unit }} {{ t.download }}</span></div>
+            <div class="metric-sub">
+                <span class="range">{{ speedtest_latest.upload_mbps|fmt_speed_value }} {{ speedtest_latest.upload_mbps|fmt_speed_unit }} {{ t.upload }}</span>
+                <span class="range">{{ speedtest_latest.ping_ms|round(0)|int }} ms Ping</span>
+                <span class="range">{{ speedtest_latest.jitter_ms|round(1) }} ms Jitter</span>
             </div>
         </div>
         {% endif %}
@@ -470,77 +430,76 @@
     {% set bnetz_dl_pct = ((bnetz_latest.download_measured_avg / bnetz_latest.download_max_tariff * 100)|round(0)|int) if bnetz_latest.download_max_tariff else 0 %}
     {% set bnetz_ul_pct = ((bnetz_latest.upload_measured_avg / bnetz_latest.upload_max_tariff * 100)|round(0)|int) if bnetz_latest.upload_max_tariff else 0 %}
     {% set bnetz_has_deviation = bnetz_latest.verdict_download == 'deviation' or bnetz_latest.verdict_upload == 'deviation' %}
-    <div class="metric-summary-row">
-        <div class="metric-summary-card {{ 'health-crit' if bnetz_has_deviation else 'health-good' }}" style="flex:1;">
-            <div class="metric-summary-header">
-                <i data-lucide="file-check" class="metric-icon"></i>
+    <div class="metrics-grid" style="grid-template-columns:1fr;">
+        <div class="metric-card glass">
+            <div class="metric-header">
                 <span class="metric-label">{{ t.bnetz_title }}</span>
+                <div class="metric-icon {{ 'amber' if bnetz_has_deviation else 'green' }}"><i data-lucide="file-check"></i></div>
             </div>
-            <div class="metric-summary-values" style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;">
-                <div class="metric-value-item">
-                    <span class="value">{{ bnetz_latest.download_measured_avg|round(0)|int }}</span>
-                    <span class="unit">/ {{ bnetz_latest.download_max_tariff|round(0)|int }} Mbit/s ({{ bnetz_dl_pct }}%)</span>
-                    <span class="sublabel">{{ t.download }}</span>
-                </div>
-                <div class="metric-value-divider"></div>
-                <div class="metric-value-item">
-                    <span class="value">{{ bnetz_latest.upload_measured_avg|round(0)|int }}</span>
-                    <span class="unit">/ {{ bnetz_latest.upload_max_tariff|round(0)|int }} Mbit/s ({{ bnetz_ul_pct }}%)</span>
-                    <span class="sublabel">{{ t.upload }}</span>
-                </div>
-                <div class="metric-value-item secondary" style="grid-column:1/-1;text-align:center;">
-                    <span class="value" style="font-size:0.8em;color:{{ 'var(--crit)' if bnetz_has_deviation else 'var(--good)' }};">
-                        {{ t.bnetz_verdict_deviation if bnetz_has_deviation else t.bnetz_verdict_ok }}
-                    </span>
-                    <span class="sublabel">{{ bnetz_latest.date }} &middot; {{ bnetz_latest.provider }}</span>
-                </div>
+            <div class="metric-value" style="color:{{ 'var(--crit)' if bnetz_has_deviation else 'var(--good)' }};">{{ bnetz_latest.download_measured_avg|round(0)|int }} / {{ bnetz_latest.download_max_tariff|round(0)|int }}<span class="unit">Mbit/s ({{ bnetz_dl_pct }}%) {{ t.download }}</span></div>
+            <div class="metric-sub">
+                <span class="range">{{ bnetz_latest.upload_measured_avg|round(0)|int }} / {{ bnetz_latest.upload_max_tariff|round(0)|int }} Mbit/s ({{ bnetz_ul_pct }}%) {{ t.upload }}</span>
+            </div>
+            <div class="metric-sub">
+                <span class="badge badge-{{ 'crit' if bnetz_has_deviation else 'good' }}">{{ t.bnetz_verdict_deviation if bnetz_has_deviation else t.bnetz_verdict_ok }}</span>
+                <span class="range">{{ bnetz_latest.date }} &middot; {{ bnetz_latest.provider }}</span>
             </div>
         </div>
     </div>
     {% endif %}
 
     {# ══════════════════════════════════════════════════════════════════════════
-       CHANNEL HEALTH OVERVIEW - Phase 3 Task 3.4
-       Donut charts showing health distribution for DS/US channels
+       CHANNEL HEALTH OVERVIEW — Ring gauges for DS/US health distribution
        ══════════════════════════════════════════════════════════════════════════ #}
-    <div class="channel-health-card">
-        <div class="channel-health-header">
-            <i data-lucide="pie-chart" class="channel-health-icon"></i>
-            <h3 class="channel-health-title">{{ t.get('channel_health_overview', 'Channel Health Overview') }}</h3>
+    {% set ds_good = ds|selectattr('health', 'equalto', 'good')|list|length %}
+    {% set ds_warn = ds|rejectattr('health', 'equalto', 'good')|rejectattr('health', 'equalto', 'critical')|list|length %}
+    {% set ds_crit = ds|selectattr('health', 'equalto', 'critical')|list|length %}
+    {% set ds_total = ds|length %}
+    {% set ds_pct = ((ds_good / ds_total * 100)|round(0)|int) if ds_total > 0 else 0 %}
+    {% set us_good_c = us|selectattr('health', 'equalto', 'good')|list|length %}
+    {% set us_warn_c = us|rejectattr('health', 'equalto', 'good')|rejectattr('health', 'equalto', 'critical')|list|length %}
+    {% set us_crit_c = us|selectattr('health', 'equalto', 'critical')|list|length %}
+    {% set us_total = us|length %}
+    {% set us_pct = ((us_good_c / us_total * 100)|round(0)|int) if us_total > 0 else 0 %}
+    <div class="health-overview">
+        <div class="health-ring-card glass">
+            <div class="ring-wrap"
+                 data-good="{{ ds_good }}" data-warn="{{ ds_warn }}" data-crit="{{ ds_crit }}"
+                 ontouchstart="this.classList.add('touched')" ontouchend="setTimeout(()=>this.classList.remove('touched'),2000)">
+                <canvas id="ds-health-donut" width="100" height="100"></canvas>
+                <div class="ring-center">
+                    <span class="ring-pct" style="color:var(--{{ 'good' if ds_pct >= 80 else ('warn' if ds_pct >= 50 else 'crit') }});">{{ ds_pct }}%</span>
+                    <span class="ring-label-small">healthy</span>
+                </div>
+            </div>
+            <div class="ring-details">
+                <div class="ring-title">{{ t.downstream }}</div>
+                <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:var(--space-xs);">{{ ds_total }} {{ t.channels }}</div>
+                <div class="ring-legend">
+                    <div class="ring-legend-item"><span class="ring-legend-dot" style="background:var(--good);"></span> {{ t.health_good }} <span class="ring-legend-count" style="color:var(--good);">{{ ds_good }}</span></div>
+                    <div class="ring-legend-item"><span class="ring-legend-dot" style="background:var(--warn);"></span> {{ t.health_warning }} <span class="ring-legend-count" style="color:{{ 'var(--warn)' if ds_warn > 0 else 'var(--text-muted)' }};">{{ ds_warn }}</span></div>
+                    <div class="ring-legend-item"><span class="ring-legend-dot" style="background:var(--crit);"></span> {{ t.health_critical }} <span class="ring-legend-count" style="color:{{ 'var(--crit)' if ds_crit > 0 else 'var(--text-muted)' }};">{{ ds_crit }}</span></div>
+                </div>
+            </div>
         </div>
-        
-        <div class="channel-health-charts">
-            <!-- Downstream Donut -->
-            <div class="health-chart-container" 
-                 data-good="{{ ds|selectattr('health', 'equalto', 'good')|list|length }}"
-                 data-warn="{{ ds|rejectattr('health', 'equalto', 'good')|rejectattr('health', 'equalto', 'critical')|list|length }}"
-                 data-crit="{{ ds|selectattr('health', 'equalto', 'critical')|list|length }}">
-                <canvas id="ds-health-donut"></canvas>
-                <div class="chart-label">{{ t.downstream }}</div>
+        <div class="health-ring-card glass">
+            <div class="ring-wrap"
+                 data-good="{{ us_good_c }}" data-warn="{{ us_warn_c }}" data-crit="{{ us_crit_c }}"
+                 ontouchstart="this.classList.add('touched')" ontouchend="setTimeout(()=>this.classList.remove('touched'),2000)">
+                <canvas id="us-health-donut" width="100" height="100"></canvas>
+                <div class="ring-center">
+                    <span class="ring-pct" style="color:var(--{{ 'good' if us_pct >= 80 else ('warn' if us_pct >= 50 else 'crit') }});">{{ us_pct }}%</span>
+                    <span class="ring-label-small">healthy</span>
+                </div>
             </div>
-            
-            <!-- Upstream Donut -->
-            <div class="health-chart-container"
-                 data-good="{{ us|selectattr('health', 'equalto', 'good')|list|length }}"
-                 data-warn="{{ us|rejectattr('health', 'equalto', 'good')|rejectattr('health', 'equalto', 'critical')|list|length }}"
-                 data-crit="{{ us|selectattr('health', 'equalto', 'critical')|list|length }}">
-                <canvas id="us-health-donut"></canvas>
-                <div class="chart-label">{{ t.upstream }}</div>
-            </div>
-        </div>
-        
-        <div class="channel-health-legend">
-            <div class="legend-item">
-                <span class="legend-dot legend-good"></span>
-                <span class="legend-label">{{ t.health_good }}</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-dot legend-warn"></span>
-                <span class="legend-label">{{ t.health_warning }}</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-dot legend-crit"></span>
-                <span class="legend-label">{{ t.health_critical }}</span>
+            <div class="ring-details">
+                <div class="ring-title">{{ t.upstream }}</div>
+                <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:var(--space-xs);">{{ us_total }} {{ t.channels }}</div>
+                <div class="ring-legend">
+                    <div class="ring-legend-item"><span class="ring-legend-dot" style="background:var(--good);"></span> {{ t.health_good }} <span class="ring-legend-count" style="color:var(--good);">{{ us_good_c }}</span></div>
+                    <div class="ring-legend-item"><span class="ring-legend-dot" style="background:var(--warn);"></span> {{ t.health_warning }} <span class="ring-legend-count" style="color:{{ 'var(--warn)' if us_warn_c > 0 else 'var(--text-muted)' }};">{{ us_warn_c }}</span></div>
+                    <div class="ring-legend-item"><span class="ring-legend-dot" style="background:var(--crit);"></span> {{ t.health_critical }} <span class="ring-legend-count" style="color:{{ 'var(--crit)' if us_crit_c > 0 else 'var(--text-muted)' }};">{{ us_crit_c }}</span></div>
+                </div>
             </div>
         </div>
     </div>
@@ -551,14 +510,19 @@
     {% endfor %}
 
     {# ══════════════════════════════════════════════════════════════════════════
-       DOWNSTREAM CHANNELS - Phase 3 Task 3.5
-       Modern card containers for channel tables
+       DOWNSTREAM CHANNELS — Channel detail tables with collapsible groups
        ══════════════════════════════════════════════════════════════════════════ #}
-    <div class="channel-section">
-        <div class="channel-section-header">
-            <i data-lucide="radio-tower" class="section-icon"></i>
-            <h2 class="section-title">{{ t.downstream }}</h2>
-            <span class="section-badge">{{ ds|length }} {{ t.channel if ds|length == 1 else t.channels }}</span>
+    <div class="channels-section glass">
+        <div class="channel-header">
+            <div>
+                <h2 class="channel-title"><i data-lucide="radio-tower" style="width:16px;height:16px;vertical-align:-2px;margin-right:4px;"></i> {{ t.downstream }}</h2>
+                <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">{{ ds|length }} {{ t.channels }}</div>
+            </div>
+            <div class="channel-health-chips">
+                <span class="health-chip"><span class="dot good"></span> {{ ds_good }} {{ t.health_good }}</span>
+                <span class="health-chip"><span class="dot warn"></span> {{ ds_warn }} {{ t.health_warning }}</span>
+                <span class="health-chip"><span class="dot crit"></span> {{ ds_crit }} {{ t.health_critical }}</span>
+            </div>
         </div>
 
         {% for group in ds|groupby('docsis_version')|reverse %}
@@ -615,11 +579,17 @@
        UPSTREAM CHANNELS - Phase 3 Task 3.5
        Modern card containers for channel tables
        ══════════════════════════════════════════════════════════════════════════ #}
-    <div class="channel-section">
-        <div class="channel-section-header">
-            <i data-lucide="radio-tower" class="section-icon"></i>
-            <h2 class="section-title">{{ t.upstream }}</h2>
-            <span class="section-badge">{{ us|length }} {{ t.channel if us|length == 1 else t.channels }}</span>
+    <div class="channels-section glass">
+        <div class="channel-header">
+            <div>
+                <h2 class="channel-title"><i data-lucide="radio-tower" style="width:16px;height:16px;vertical-align:-2px;margin-right:4px;"></i> {{ t.upstream }}</h2>
+                <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">{{ us|length }} {{ t.channels }}</div>
+            </div>
+            <div class="channel-health-chips">
+                <span class="health-chip"><span class="dot good"></span> {{ us_good_c }} {{ t.health_good }}</span>
+                <span class="health-chip"><span class="dot warn"></span> {{ us_warn_c }} {{ t.health_warning }}</span>
+                <span class="health-chip"><span class="dot crit"></span> {{ us_crit_c }} {{ t.health_critical }}</span>
+            </div>
         </div>
 
         {% for group in us|groupby('docsis_version')|reverse %}
