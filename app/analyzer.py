@@ -32,7 +32,7 @@ _FALLBACK_THRESHOLDS = {
         "4096QAM": {"good_min": 40.0, "warning_min": 38.0, "critical_min": 36.0},
     },
     "upstream_modulation": {"critical_max_qam": 4, "warning_max_qam": 16},
-    "errors": {"uncorrectable_pct": {"warning": 1.0, "critical": 3.0}},
+    "errors": {"uncorrectable_pct": {"warning": 1.0, "critical": 3.0, "min_codewords": 1000}},
 }
 
 
@@ -122,6 +122,7 @@ def _get_uncorr_thresholds():
     return {
         "warning": pct.get("warning", 1.0),
         "critical": pct.get("critical", 3.0),
+        "min_codewords": pct.get("min_codewords", 1000),
     }
 
 
@@ -427,13 +428,16 @@ def analyze(data: dict) -> dict:
         issues.append("snr_warn")
 
     total_codewords = total_corr + total_uncorr
-    if total_codewords > 0:
-        uncorr_pct = (total_uncorr / total_codewords) * 100
-        et = _get_uncorr_thresholds()
+    et = _get_uncorr_thresholds()
+    if total_codewords >= et["min_codewords"]:
+        uncorr_pct = round((total_uncorr / total_codewords) * 100, 2)
         if uncorr_pct >= et["critical"]:
             issues.append("uncorr_errors_critical")
         elif uncorr_pct >= et["warning"]:
             issues.append("uncorr_errors_high")
+    else:
+        uncorr_pct = 0.0
+    summary["ds_uncorr_pct"] = uncorr_pct
 
     if not issues:
         summary["health"] = "good"

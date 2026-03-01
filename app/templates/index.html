@@ -408,7 +408,7 @@
                 <span class="metric-label">{{ t.card_errors }}</span>
                 <div class="metric-icon amber"><i data-lucide="alert-triangle"></i></div>
             </div>
-            <div class="metric-value" style="color:var(--{{ error_health }});">{{ s.ds_uncorrectable_errors|fmt_k }}<span class="unit">uncorr.</span></div>
+            <div class="metric-value" style="color:var(--{{ error_health }});">{{ s.ds_uncorr_pct }}<span class="unit">%</span></div>
             <div class="metric-sub">
                 <span class="badge badge-{{ error_health }}">{{ health_labels[error_health] }}</span>
                 <span class="range">{{ s.ds_correctable_errors|fmt_k }} corr. / {{ s.ds_uncorrectable_errors|fmt_k }} uncorr.</span>

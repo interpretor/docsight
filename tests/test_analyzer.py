@@ -195,7 +195,7 @@ class TestHealthPoor:
     def test_uncorrectable_errors(self):
         """High uncorrectable error percent triggers issue."""
         data = _make_data(
-            ds30=[_make_ds30(1, power=2.0, mse="-35", corr=100, uncorr=2)],
+            ds30=[_make_ds30(1, power=2.0, mse="-35", corr=10000, uncorr=200)],
             us30=[_make_us30(1, power=42.0)],
         )
         result = analyze(data)
@@ -205,7 +205,7 @@ class TestHealthPoor:
     def test_multiple_issues(self):
         """Multiple issues can coexist."""
         data = _make_data(
-            ds30=[_make_ds30(1, power=21.0, mse="-27", corr=90, uncorr=10)],
+            ds30=[_make_ds30(1, power=21.0, mse="-27", corr=9000, uncorr=1000)],
             us30=[_make_us30(1, power=55.0)],
         )
         result = analyze(data)
@@ -741,18 +741,26 @@ class TestPercentErrors:
 
     def test_warning_threshold(self):
         # 1% uncorrectable => warning
-        data = _make_data(ds30=[_make_ds30(1, corr=99, uncorr=1)])
+        data = _make_data(ds30=[_make_ds30(1, corr=9900, uncorr=100)])
         result = analyze(data)
         assert "uncorr_errors_high" in result["summary"]["health_issues"]
 
     def test_critical_threshold(self):
         # 5% uncorrectable => critical
-        data = _make_data(ds30=[_make_ds30(1, corr=95, uncorr=5)])
+        data = _make_data(ds30=[_make_ds30(1, corr=9500, uncorr=500)])
         result = analyze(data)
         assert "uncorr_errors_critical" in result["summary"]["health_issues"]
 
     def test_zero_codewords_no_error(self):
         data = _make_data(ds30=[_make_ds30(1, corr=0, uncorr=0)])
         result = analyze(data)
+        assert "uncorr_errors_high" not in result["summary"]["health_issues"]
+        assert "uncorr_errors_critical" not in result["summary"]["health_issues"]
+
+    def test_below_min_codewords_suppressed(self):
+        # 50% uncorrectable but only 6 total codewords — below min_codewords threshold
+        data = _make_data(ds30=[_make_ds30(1, corr=3, uncorr=3)])
+        result = analyze(data)
+        assert result["summary"]["ds_uncorr_pct"] == 0.0
         assert "uncorr_errors_high" not in result["summary"]["health_issues"]
         assert "uncorr_errors_critical" not in result["summary"]["health_issues"]
