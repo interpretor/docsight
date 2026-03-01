@@ -31,6 +31,5 @@ mockup*.png
 .claude/
 .worktrees/
 
-# GSD planning (tracked)
-!.planning/
-!.planning/**
+# GSD planning (local only)
+.planning/
