@@ -88,7 +88,7 @@
         <div class="nav-separator"></div>
         <div class="nav-group">
             <div class="nav-group-label">{{ t.modules|default('Modules') }}</div>
-            {% for mod in settings_modules|sort(attribute='menu.order') %}
+            {% for mod in settings_modules|sort(attribute='name') %}
             <button class="nav-item" data-section="mod-{{ mod.id|replace('.', '_') }}" onclick="switchSection('mod-{{ mod.id|replace('.', '_') }}')">
                 <i data-lucide="{{ mod.menu.get('icon', 'puzzle') }}" class="nav-icon"></i>
                 {{ t.get(mod.menu.label_key, mod.name) }}
