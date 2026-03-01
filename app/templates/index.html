@@ -249,122 +249,74 @@
     } %}
 
     {# ══════════════════════════════════════════════════════════════════════════
-       HERO CARD - Phase 3 Task 3.1
-       Health status + inline trend chart (SNR/Power, 24h)
+       HERO CARD — Health status + meta info + trend chart
        ══════════════════════════════════════════════════════════════════════════ #}
-    <div class="hero-card health-{{ 'good' if s.health == 'good' else ('crit' if s.health == 'poor' else 'warn') }}">
+    {% set hero_health = 'good' if s.health == 'good' else ('crit' if s.health == 'poor' else 'warn') %}
+    <div class="hero-card glass">
         <div class="hero-header">
             <div class="hero-status">
-                <i data-lucide="activity" class="hero-icon"></i>
-                <div class="hero-status-text">
-                    <h1 class="hero-title">{{ health_label }}{% if demo_mode %}<span class="demo-badge">{{ t.demo_mode|default('DEMO') }}</span>{% endif %}</h1>
+                <div class="hero-icon-wrap {{ hero_health }}">
+                    <i data-lucide="activity"></i>
+                </div>
+                <div>
+                    <h1 class="hero-title">
+                        {{ health_label }}
+                        {% if demo_mode %}<span class="badge badge-muted" style="font-size:0.68rem;">{{ t.demo_mode|default('DEMO') }}</span>{% endif %}
+                    </h1>
                     <p class="hero-subtitle">{{ health_msgs.get(s.health, '') }}</p>
                 </div>
             </div>
-            <div class="hero-meta">
-                {# 1. Provider #}
-                {% if isp_name %}
-                <span class="hero-isp">
-                    {% set isp_lower = isp_name.lower() %}
-                    {% if 'vodafone' in isp_lower %}
-                    <img src="/static/img/providers/vodafone.svg" alt="{{ isp_name }}" style="width:14px;height:14px;margin-right:4px;">
-                    {% elif 'telekom' in isp_lower %}
-                    <img src="/static/img/providers/telekom.svg" alt="{{ isp_name }}" style="width:14px;height:14px;margin-right:4px;">
-                    {% elif 'o2' in isp_lower %}
-                    <img src="/static/img/providers/o2.svg" alt="{{ isp_name }}" style="width:14px;height:14px;margin-right:4px;">
-                    {% else %}
-                    <img src="/static/img/providers/generic.svg" alt="{{ isp_name }}" style="width:14px;height:14px;margin-right:4px;opacity:0.7;">
+            <div class="hero-right">
+                <div class="hero-meta">
+                    {% if isp_name %}
+                    <span class="hero-meta-item"><i data-lucide="wifi"></i> {{ isp_name }}</span>
                     {% endif %}
-                    {{ isp_name }}
-                </span>
-                {% endif %}
-                
-                {# 2. Speed #}
-                {% if connection_info and connection_info.max_downstream_kbps %}
-                <span class="hero-speed">
-                    {{ connection_info.max_downstream_kbps // 1000 }}/{{ connection_info.max_upstream_kbps // 1000 }} MBit/s
-                    <span class="info-icon" data-tooltip="Auto-detected from modem" style="margin-left:3px;">
-                        <i data-lucide="info" style="width:12px;height:12px;opacity:0.5;"></i>
+                    {% if connection_info and connection_info.max_downstream_kbps %}
+                    <span class="hero-meta-item"><i data-lucide="gauge"></i> {{ connection_info.max_downstream_kbps // 1000 }}/{{ connection_info.max_upstream_kbps // 1000 }} MBit/s</span>
+                    {% elif booked_download and booked_download > 0 %}
+                    <span class="hero-meta-item"><i data-lucide="gauge"></i> {{ booked_download|int }}/{{ booked_upload|int }} MBit/s</span>
+                    {% endif %}
+                    <span class="hero-meta-item"><i data-lucide="radio"></i> {{ s.ds_total }}/{{ s.us_total }} Ch</span>
+                    {% if gaming_quality_enabled and gaming_index %}
+                    <span class="hero-meta-item"
+                          title="{{ gaming_index.score }}/100 — {{ t['gaming_tooltip_' ~ gaming_index.grade|lower] }}{% if not gaming_index.has_speedtest %} ({{ t.gaming_no_speedtest }}){% endif %}">
+                        <i data-lucide="gamepad-2"></i> Gaming <span class="badge badge-{{ gaming_index.grade|lower }}">{{ gaming_index.grade }}</span>
                     </span>
-                </span>
-                {% elif booked_download and booked_download > 0 %}
-                <span class="hero-speed">
-                    {{ booked_download|int }}/{{ booked_upload|int }} MBit/s
-                    <span class="info-icon" data-tooltip="Configured in Settings" style="margin-left:3px;">
-                        <i data-lucide="settings" style="width:12px;height:12px;opacity:0.5;"></i>
-                    </span>
-                </span>
-                {% else %}
-                <a href="/settings" style="color:var(--text-secondary);text-decoration:none;font-size:12px;opacity:0.7;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
-                    <i data-lucide="settings" style="width:11px;height:11px;margin-right:4px;"></i>
-                    <span>Set speed in Settings</span>
-                </a>
-                {% endif %}
-                
-                {# 3. Channels #}
-                <span class="hero-channels">
-                    {{ s.ds_total }} DS / {{ s.us_total }} US {{ t.channel if (s.ds_total + s.us_total) == 1 else t.channels }}
-                    <span class="info-icon" data-tooltip="Auto-detected from modem" style="margin-left:3px;">
-                        <i data-lucide="info" style="width:12px;height:12px;opacity:0.5;"></i>
-                    </span>
-                </span>
-
-                {# 4. Gaming Quality Index #}
-                {% if gaming_quality_enabled and gaming_index %}
-                <span class="hero-gaming gaming-{{ gaming_index.grade|lower }}"
-                      data-tooltip="{{ gaming_index.score }}/100 — {{ t['gaming_tooltip_' ~ gaming_index.grade|lower] }}{% if not gaming_index.has_speedtest %} ({{ t.gaming_no_speedtest }}){% endif %}">
-                    <i data-lucide="gamepad-2" style="width:14px;height:14px;"></i>
-                    <span class="gaming-grade">{{ gaming_index.grade }}</span>
-                    <span class="gaming-label">Gaming</span>
-                </span>
-                {% endif %}
+                    {% endif %}
+                </div>
+                <div class="hero-actions">
+                    <span class="last-update">{% if last_update %}{{ last_update }}{% endif %}</span>
+                    <button class="btn btn-ghost" style="padding:8px 12px;min-height:36px;" title="{{ t.refresh }}"
+                            onclick="var rb=document.getElementById('refresh-btn');if(rb)rb.click();">
+                        <i data-lucide="refresh-cw" style="width:14px;height:14px;"></i>
+                    </button>
+                </div>
             </div>
         </div>
-        
-        {% if s.health_issues %}
-        <div class="hero-issues">
-            {% for issue in s.health_issues %}
-            <span class="issue-badge" title="{{ issue_descs.get(issue, '') }}">{{ issue_labels.get(issue, issue) }}</span>
-            {% endfor %}
-        </div>
-        {% endif %}
-        
-        <div class="hero-chart-container">
+        <div class="hero-chart-wrap">
             <canvas id="hero-trend-chart"></canvas>
         </div>
     </div>
 
-    {# ── OLD Health Banner (DEPRECATED, replaced by Hero Card) ── #}
-    {# <div class="health-banner health-{{ 'good' if s.health == 'good' else ('crit' if s.health == 'poor' else 'warn') }}">
-        <div class="health-status">
-            <span class="health-icon">{% if s.health == 'good' %}&#10004;{% elif s.health == 'poor' %}&#10006;{% else %}&#9888;{% endif %}</span>
-            <span class="health-title">{{ health_label }}</span>
+    {# ── Issues Panel (moved outside hero card for prominence) ── #}
+    {% if s.health_issues %}
+    <div class="issues-panel glass">
+        <div class="issues-header">
+            <div class="metric-icon amber"><i data-lucide="alert-circle"></i></div>
+            <span style="font-weight:600;">{{ t.active_issues or 'Active Issues' }}</span>
+            <span class="badge badge-warn">{{ s.health_issues|length }}</span>
         </div>
-        <div class="health-msg">{{ health_msgs.get(s.health, '') }}</div>
-        {% if s.health_issues %}
-        <div class="health-issues">
-            {% for issue in s.health_issues %}
-            <div class="health-issue">
-                <span class="health-issue-name">{{ issue_labels.get(issue, issue) }}<span class="info-tip"><i class="tip-icon" tabindex="0">&#9432;</i><span class="tip-text">{{ issue_descs.get(issue, '') }}</span></span></span>
-                <span class="health-issue-desc">{{ issue_descs.get(issue, '') }}</span>
+        {% for issue in s.health_issues %}
+        <div class="issue-item">
+            <div class="issue-icon {{ 'crit' if 'critical' in issue else 'warn' }}"><i data-lucide="alert-circle"></i></div>
+            <div>
+                <div class="issue-text">{{ issue_labels.get(issue, issue) }}</div>
+                <div class="issue-desc">{{ issue_descs.get(issue, '') }}</div>
             </div>
-            {% endfor %}
         </div>
-        {% endif %}
-    </div> #}
-
-    {# ── OLD Connection Info Bar (DEPRECATED, moved into Hero Card meta) ── #}
-    {# {% if isp_name or (connection_info and connection_info.max_downstream_kbps) %}
-    <div class="conn-info-bar">
-        {% if isp_name %}{{ isp_name }}{% endif %}
-        {% if connection_info and connection_info.max_downstream_kbps %}
-            {% if isp_name %}<span class="conn-sep">&middot;</span>{% endif %}
-            {{ connection_info.max_downstream_kbps // 1000 }}/{{ connection_info.max_upstream_kbps // 1000 }} Mbit/s
-        {% endif %}
-        <span class="conn-sep">|</span>
-        {{ s.ds_total }} DS <span class="conn-sep">/</span> {{ s.us_total }} US {{ t.channels|lower }}
+        {% endfor %}
     </div>
-    {% endif %} #}
+    {% endif %}
 
     {# ── Per-card health ── #}
     {% set signal_health = 'crit' if 'ds_power_critical' in s.health_issues or 'snr_critical' in s.health_issues
