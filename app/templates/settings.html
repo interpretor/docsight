@@ -77,6 +77,10 @@
                 <i data-lucide="shield" class="nav-icon"></i>
                 {{ t.get('security', 'Security') }}
             </button>
+            <button class="nav-item" data-section="modules" onclick="switchSection('modules')">
+                <i data-lucide="package" class="nav-icon"></i>
+                {{ t.modules_title|default('Module Store') }}
+            </button>
         </div>
 
         <!-- Module Settings (dynamic) -->
@@ -97,15 +101,6 @@
             {% endfor %}
         </div>
         {% endif %}
-
-        <!-- Module Store -->
-        <div class="nav-separator"></div>
-        <div class="nav-group">
-            <button class="nav-item" data-section="modules" onclick="switchSection('modules')">
-                <i data-lucide="package" class="nav-icon"></i>
-                {{ t.modules_title|default('Module Store') }}
-            </button>
-        </div>
 
         <!-- Support (bottom) -->
         <div style="margin-top: auto;">
