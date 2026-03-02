@@ -194,15 +194,8 @@ function loadEvents(append) {
                     '<td style="white-space:nowrap;">' + escapeHtml(ev.timestamp.replace('T', ' ')) + '</td>' +
                     '<td><span class="' + sevClass + '">' + sevLabel + '</span></td>' +
                     '<td>' + escapeHtml(typeLabel) + '</td>' +
-                    '<td class="event-msg">' + escapeHtml(ev.message) + '</td>' +
+                    '<td class="event-msg">' + formatEventMessage(ev) + '</td>' +
                     '<td class="event-actions">' + ackBtn + '</td>';
-                if (ev.details) {
-                    tr.style.cursor = 'pointer';
-                    tr.onclick = function(e) {
-                        if (e.target.tagName === 'BUTTON') return;
-                        toggleEventDetail(ev.id, ev.details);
-                    };
-                }
                 tbody.appendChild(tr);
             });
             tableCard.style.display = '';
@@ -218,26 +211,6 @@ function loadEvents(append) {
 function loadMoreEvents() {
     _eventsOffset += _eventsPageSize;
     loadEvents(true);
-}
-
-function toggleEventDetail(eventId, details) {
-    var existing = document.getElementById('event-detail-' + eventId);
-    if (existing) {
-        existing.remove();
-        return;
-    }
-    var eventRow = document.querySelector('tr[data-event-id="' + eventId + '"]');
-    if (!eventRow) return;
-    var detailRow = document.createElement('tr');
-    detailRow.id = 'event-detail-' + eventId;
-    detailRow.className = 'event-detail-row';
-    var td = document.createElement('td');
-    td.colSpan = 5;
-    var pre = document.createElement('pre');
-    pre.textContent = JSON.stringify(details, null, 2);
-    td.appendChild(pre);
-    detailRow.appendChild(td);
-    eventRow.parentNode.insertBefore(detailRow, eventRow.nextSibling);
 }
 
 function acknowledgeEvent(eventId, e) {
