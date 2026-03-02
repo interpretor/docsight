@@ -27,7 +27,7 @@ class BQMCollector(Collector):
         self._config_mgr = config_mgr
         self._storage = BqmStorage(storage.db_path)
         self._last_date = None
-        self._spread_offset = random.randint(0, 60)  # 0-60 min spread
+        self._spread_offset = random.randint(0, 120)  # 0-120 min before target
 
     def is_enabled(self) -> bool:
         return self._config_mgr.is_bqm_configured()
@@ -39,7 +39,7 @@ class BQMCollector(Collector):
             return False
         target = self._config_mgr.get("bqm_collect_time") or "02:00"
         h, m = map(int, target.split(":"))
-        total = h * 60 + m + self._spread_offset
+        total = h * 60 + m - self._spread_offset
         target = f"{(total // 60) % 24:02d}:{total % 60:02d}"
         now_hm = time.strftime("%H:%M")
         return now_hm >= target
