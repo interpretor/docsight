@@ -13,7 +13,7 @@ import zlib
 from datetime import datetime, timedelta, timezone
 
 from .base import Collector, CollectorResult
-from ..analyzer import _channel_bitrate_mbps
+from ..analyzer import _channel_bitrate_mbps, apply_spike_suppression
 from ..gaming_index import compute_gaming_index
 
 log = logging.getLogger("docsis.collector.demo")
@@ -105,6 +105,7 @@ class DemoCollector(Collector):
 
         data = self._generate_data()
         analysis = self._analyzer(data)
+        apply_spike_suppression(analysis, self._storage.get_latest_spike_timestamp())
 
         # MQTT publishing
         if self._mqtt_pub:

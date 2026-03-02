@@ -4,6 +4,7 @@ import logging
 import time
 
 from .base import Collector, CollectorResult
+from ..analyzer import apply_spike_suppression
 from ..gaming_index import compute_gaming_index
 
 log = logging.getLogger("docsis.collector.modem")
@@ -51,6 +52,7 @@ class ModemCollector(Collector):
 
         data = self._driver.get_docsis_data()
         analysis = self._analyzer(data)  # Call injected analyzer function
+        apply_spike_suppression(analysis, self._storage.get_latest_spike_timestamp())
 
         # MQTT publishing
         if self._mqtt_pub:

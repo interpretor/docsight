@@ -227,6 +227,7 @@ class TestModemCollector:
         event_detector.check.return_value = []
 
         storage = MagicMock()
+        storage.get_latest_spike_timestamp.return_value = None
         web = MagicMock()
 
         c = ModemCollector(
@@ -293,6 +294,43 @@ class TestModemCollector:
     def test_name(self):
         c, *_ = self._make_collector()
         assert c.name == "modem"
+
+
+class TestModemCollectorSpikeSuppression:
+    """Verify spike suppression is called in the collector pipeline."""
+
+    def test_modem_collector_calls_spike_suppression(self):
+        """ModemCollector calls apply_spike_suppression after analyze."""
+        mock_driver = MagicMock(spec=ModemDriver)
+        mock_driver.get_docsis_data.return_value = {"channelDs": {"docsis30": []}, "channelUs": {"docsis30": []}}
+        mock_driver.get_device_info.return_value = {"model": "Test", "sw_version": "1.0"}
+        mock_driver.get_connection_info.return_value = None
+
+        mock_storage = MagicMock()
+        mock_storage.get_latest_spike_timestamp.return_value = None
+        mock_web = MagicMock()
+        mock_web._state = {}
+
+        fake_analysis = {
+            "summary": {"health": "good", "health_issues": [], "ds_total": 0, "us_total": 0},
+            "ds_channels": [],
+            "us_channels": [],
+        }
+        mock_analyzer = MagicMock(return_value=fake_analysis)
+
+        collector = ModemCollector(
+            driver=mock_driver,
+            analyzer_fn=mock_analyzer,
+            event_detector=MagicMock(),
+            storage=mock_storage,
+            mqtt_pub=None,
+            web=mock_web,
+            poll_interval=60,
+        )
+
+        with patch("app.collectors.modem.apply_spike_suppression") as mock_suppress:
+            collector.collect()
+            mock_suppress.assert_called_once_with(fake_analysis, None)
 
 
 # ── SpeedtestCollector Tests ──
@@ -704,6 +742,7 @@ class TestModemCollectorErrors:
         analyzer_fn = MagicMock()
         event_detector = MagicMock()
         storage = MagicMock()
+        storage.get_latest_spike_timestamp.return_value = None
         web = MagicMock()
         c = ModemCollector(
             driver=driver, analyzer_fn=analyzer_fn, event_detector=event_detector,
