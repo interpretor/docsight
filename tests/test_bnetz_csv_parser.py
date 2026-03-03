@@ -138,7 +138,8 @@ class TestCsvParser:
         assert result["measurements_upload"][0]["mbps"] == 53.29
         assert result["measurements_download"][0]["time"] == "14:26:41"
 
-    def test_tariff_fields_null_for_csv(self):
+    def test_tariff_fields_null_for_web_csv(self):
+        """Web CSV has no tariff columns -- fields stay None."""
         csv = (
             "Datum;Uhrzeit;Download (Mbit/s);Upload (Mbit/s)\n"
             "15.03.2026;14:00;235,50;38,50\n"
@@ -147,3 +148,26 @@ class TestCsvParser:
         assert result["tariff"] is None
         assert result["download_max"] is None
         assert result["upload_max"] is None
+        assert result["provider"] == "CSV Import"
+
+    def test_desktop_app_tariff_extracted(self):
+        """Desktop App / Sidecar CSV has SOLL columns and provider/tariff."""
+        csv = (
+            "Nr.;Messzeitpunkt;Download (Mbit/s);Download SOLL minimal (Mbit/s);"
+            "Download SOLL normalerweise (Mbit/s);Download SOLL maximal (Mbit/s);"
+            "Upload (Mbit/s);Upload SOLL minimal (Mbit/s);"
+            "Upload SOLL normalerweise (Mbit/s);Upload SOLL maximal (Mbit/s);"
+            "Laufzeit (ms);Anbieter;Tarif\n"
+            "1;03.03.2026 14:26:41;558,90;600;850;1000;53,29;15;35;50;20;Vodafone;GigaZuhause 1000\n"
+        )
+        result = parse_bnetz_csv(csv)
+        assert result["provider"] == "Vodafone"
+        assert result["tariff"] == "GigaZuhause 1000"
+        assert result["download_max"] == 1000.0
+        assert result["download_normal"] == 850.0
+        assert result["download_min"] == 600.0
+        assert result["upload_max"] == 50.0
+        assert result["upload_normal"] == 35.0
+        assert result["upload_min"] == 15.0
+        assert result["download_measured_avg"] == 558.9
+        assert result["upload_measured_avg"] == 53.29

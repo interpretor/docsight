@@ -92,12 +92,31 @@ def parse_bnetz_csv(csv_content):
     dl_col = _find_col(header_lower, ["download", "download (mbit/s)", "dl", "download_mbps"])
     ul_col = _find_col(header_lower, ["upload", "upload (mbit/s)", "ul", "upload_mbps"])
 
+    # Desktop App / Sidecar: tariff and provider columns
+    dl_max_col = _find_col(header_lower, ["download soll maximal (mbit/s)"])
+    dl_norm_col = _find_col(header_lower, ["download soll normalerweise (mbit/s)"])
+    dl_min_col = _find_col(header_lower, ["download soll minimal (mbit/s)"])
+    ul_max_col = _find_col(header_lower, ["upload soll maximal (mbit/s)"])
+    ul_norm_col = _find_col(header_lower, ["upload soll normalerweise (mbit/s)"])
+    ul_min_col = _find_col(header_lower, ["upload soll minimal (mbit/s)"])
+    provider_col = _find_col(header_lower, ["anbieter", "provider"])
+    tariff_col = _find_col(header_lower, ["tarif", "tariff"])
+
     if dl_col is None and ul_col is None:
         raise ValueError("CSV must contain at least download or upload speed columns")
 
     dl_measurements = []
     ul_measurements = []
     dates = []
+    # Tariff/provider values (taken from first data row, same for all rows)
+    csv_provider = None
+    csv_tariff = None
+    csv_dl_max = None
+    csv_dl_norm = None
+    csv_dl_min = None
+    csv_ul_max = None
+    csv_ul_norm = None
+    csv_ul_min = None
 
     for i, row in enumerate(rows[1:], start=1):
         if not row or all(not c.strip() for c in row):
@@ -109,6 +128,20 @@ def parse_bnetz_csv(csv_content):
         # Desktop App: Messzeitpunkt contains "DD.MM.YYYY HH:MM:SS" combined
         if time_val is None and date_val and " " in date_val:
             date_val, time_val = date_val.rsplit(" ", 1)
+
+        # Extract tariff/provider from first data row (identical across rows)
+        if csv_provider is None and provider_col is not None and provider_col < len(row):
+            csv_provider = row[provider_col].strip() or None
+        if csv_tariff is None and tariff_col is not None and tariff_col < len(row):
+            csv_tariff = row[tariff_col].strip() or None
+        if csv_dl_max is None:
+            csv_dl_max = _parse_de_float(row[dl_max_col]) if dl_max_col is not None and dl_max_col < len(row) else None
+            csv_dl_norm = _parse_de_float(row[dl_norm_col]) if dl_norm_col is not None and dl_norm_col < len(row) else None
+            csv_dl_min = _parse_de_float(row[dl_min_col]) if dl_min_col is not None and dl_min_col < len(row) else None
+            csv_ul_max = _parse_de_float(row[ul_max_col]) if ul_max_col is not None and ul_max_col < len(row) else None
+            csv_ul_norm = _parse_de_float(row[ul_norm_col]) if ul_norm_col is not None and ul_norm_col < len(row) else None
+            csv_ul_min = _parse_de_float(row[ul_min_col]) if ul_min_col is not None and ul_min_col < len(row) else None
+
         dl_val = _parse_de_float(row[dl_col]) if dl_col is not None and dl_col < len(row) else None
         ul_val = _parse_de_float(row[ul_col]) if ul_col is not None and ul_col < len(row) else None
 
@@ -144,14 +177,14 @@ def parse_bnetz_csv(csv_content):
 
     result = {
         "date": measurement_date,
-        "provider": "CSV Import",
-        "tariff": None,
-        "download_max": None,
-        "download_normal": None,
-        "download_min": None,
-        "upload_max": None,
-        "upload_normal": None,
-        "upload_min": None,
+        "provider": csv_provider or "CSV Import",
+        "tariff": csv_tariff,
+        "download_max": csv_dl_max,
+        "download_normal": csv_dl_norm,
+        "download_min": csv_dl_min,
+        "upload_max": csv_ul_max,
+        "upload_normal": csv_ul_norm,
+        "upload_min": csv_ul_min,
         "download_measured_avg": dl_avg,
         "upload_measured_avg": ul_avg,
         "measurement_count": max(len(dl_measurements), len(ul_measurements)),
