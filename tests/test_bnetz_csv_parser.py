@@ -112,6 +112,32 @@ class TestCsvParser:
         result = parse_bnetz_csv(csv)
         assert result["measurement_count"] == 2
 
+    def test_web_test_messzeitpunkt(self):
+        """Web test CSV: Messzeitpunkt (date only) + separate Uhrzeit column."""
+        csv = (
+            '"Messzeitpunkt";"Download (Mbit/s)";"Upload (Mbit/s)";"Laufzeit (ms)";"Test-ID";"Version";"Betriebssystem";"Internet-Browser";"Uhrzeit"\n'
+            '"03.03.2026";"469,01";"53,99";"16";"bbc75c...";"4.59";"Windows";"Firefox 148.0";"14:30:26"\n'
+        )
+        result = parse_bnetz_csv(csv)
+        assert result["date"] == "2026-03-03"
+        assert result["measurement_count"] == 1
+        assert result["measurements_download"][0]["mbps"] == 469.01
+        assert result["measurements_upload"][0]["mbps"] == 53.99
+        assert result["measurements_download"][0]["time"] == "14:30:26"
+
+    def test_desktop_app_messzeitpunkt_combined(self):
+        """Desktop App CSV: Messzeitpunkt contains combined date+time."""
+        csv = (
+            "Nr.;Messzeitpunkt;Download (Mbit/s);Upload (Mbit/s)\n"
+            "1;03.03.2026 14:26:41;558,90;53,29\n"
+        )
+        result = parse_bnetz_csv(csv)
+        assert result["date"] == "2026-03-03"
+        assert result["measurement_count"] == 1
+        assert result["measurements_download"][0]["mbps"] == 558.9
+        assert result["measurements_upload"][0]["mbps"] == 53.29
+        assert result["measurements_download"][0]["time"] == "14:26:41"
+
     def test_tariff_fields_null_for_csv(self):
         csv = (
             "Datum;Uhrzeit;Download (Mbit/s);Upload (Mbit/s)\n"

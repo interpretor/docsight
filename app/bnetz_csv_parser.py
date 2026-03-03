@@ -86,8 +86,9 @@ def parse_bnetz_csv(csv_content):
     header_lower = [h.strip().lower() for h in header]
 
     # Find relevant column indices
-    date_col = _find_col(header_lower, ["datum", "date", "messdatum"])
-    time_col = _find_col(header_lower, ["uhrzeit", "time", "zeit"])
+    date_col = _find_col(header_lower, ["datum", "date", "messdatum", "messzeitpunkt"])
+    time_col = _find_col(header_lower, ["uhrzeit", "time"],
+                         exclude={date_col} if date_col is not None else None)
     dl_col = _find_col(header_lower, ["download", "download (mbit/s)", "dl", "download_mbps"])
     ul_col = _find_col(header_lower, ["upload", "upload (mbit/s)", "ul", "upload_mbps"])
 
@@ -104,6 +105,10 @@ def parse_bnetz_csv(csv_content):
 
         date_val = row[date_col].strip() if date_col is not None and date_col < len(row) else None
         time_val = row[time_col].strip() if time_col is not None and time_col < len(row) else None
+
+        # Desktop App: Messzeitpunkt contains "DD.MM.YYYY HH:MM:SS" combined
+        if time_val is None and date_val and " " in date_val:
+            date_val, time_val = date_val.rsplit(" ", 1)
         dl_val = _parse_de_float(row[dl_col]) if dl_col is not None and dl_col < len(row) else None
         ul_val = _parse_de_float(row[ul_col]) if ul_col is not None and ul_col < len(row) else None
 
@@ -165,10 +170,24 @@ def parse_bnetz_csv(csv_content):
     return result
 
 
-def _find_col(header, candidates):
-    """Find the first matching column index from a list of candidate names."""
+def _find_col(header, candidates, exclude=None):
+    """Find the first matching column index from a list of candidate names.
+
+    Prefers exact matches over substring matches to avoid false positives
+    (e.g. "date" matching "datenübertragungsrate").
+    """
+    # First pass: exact match
     for candidate in candidates:
         for i, h in enumerate(header):
+            if exclude and i in exclude:
+                continue
+            if candidate == h:
+                return i
+    # Second pass: substring match
+    for candidate in candidates:
+        for i, h in enumerate(header):
+            if exclude and i in exclude:
+                continue
             if candidate in h:
                 return i
     return None
