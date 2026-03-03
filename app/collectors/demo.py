@@ -643,11 +643,19 @@ class DemoCollector(Collector):
         log.info("Demo: seeded 30 BQM graphs")
 
     def _seed_bnetz_measurements(self, now):
-        """Seed 9 BNetzA measurement campaigns over 9 months (matching 250/40 Cable tariff)."""
+        """Seed 9 BNetzA measurement campaigns over 9 months.
+
+        Based on real Vodafone GigaZuhause 1000 Kabel tariff values
+        from breitbandmessung.de Desktop App and Web Test exports.
+        """
         # Campaign dates: roughly monthly, spread over the demo period
         campaign_offsets_days = [250, 220, 190, 160, 130, 100, 70, 40, 10]
         # Campaigns where download shows deviation (correlate with bad signal periods)
         bad_campaigns = {2, 5, 7}  # indices into campaign_offsets_days
+
+        # Tariff values from real Desktop App CSV (GigaZuhause 1000 Kabel Nov 2023)
+        dl_max, dl_normal, dl_min = 1000.0, 850.0, 600.0
+        ul_max, ul_normal, ul_min = 50.0, 35.0, 15.0
 
         rows = []
         for idx, offset in enumerate(campaign_offsets_days):
@@ -662,11 +670,13 @@ class DemoCollector(Collector):
             for m in range(5):
                 m_date = campaign_date + timedelta(days=m)
                 if is_bad:
-                    dl = round(random.uniform(150, 185), 2)
-                    ul = round(random.uniform(28, 38), 2)
+                    # Below normal: realistic cable degradation (450-600 Mbit/s)
+                    dl = round(random.uniform(450, 600), 2)
+                    ul = round(random.uniform(30, 45), 2)
                 else:
-                    dl = round(random.uniform(200, 250), 2)
-                    ul = round(random.uniform(30, 40), 2)
+                    # Normal operation: realistic 1 Gbit cable (850-980 Mbit/s)
+                    dl = round(random.uniform(850, 980), 2)
+                    ul = round(random.uniform(40, 55), 2)
                 dl_values.append(dl)
                 ul_values.append(ul)
                 measurements_dl.append({
@@ -681,10 +691,9 @@ class DemoCollector(Collector):
             dl_avg = round(sum(dl_values) / len(dl_values), 2)
             ul_avg = round(sum(ul_values) / len(ul_values), 2)
 
-            # BNetzA verdicts: "ok" or "deviation"
-            # Deviation if avg < normal (200 for DL, 30 for UL)
-            verdict_dl = "deviation" if dl_avg < 200 else "ok"
-            verdict_ul = "deviation" if ul_avg < 30 else "ok"
+            # BNetzA verdicts based on tariff normal thresholds
+            verdict_dl = "deviation" if dl_avg < dl_normal else "ok"
+            verdict_ul = "deviation" if ul_avg < ul_normal else "ok"
 
             measurements_json = json.dumps({
                 "download": measurements_dl,
@@ -694,14 +703,14 @@ class DemoCollector(Collector):
             rows.append((
                 campaign_date.strftime("%Y-%m-%d"),
                 campaign_date.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "Vodafone Kabel",     # provider
-                "Cable 250",          # tariff
-                250.0,                # download_max_tariff
-                200.0,                # download_normal_tariff
-                150.0,                # download_min_tariff
-                40.0,                 # upload_max_tariff
-                30.0,                 # upload_normal_tariff
-                10.0,                 # upload_min_tariff
+                "Vodafone Kabel",                  # provider
+                "GigaZuhause 1000 Kabel Nov 2023",  # tariff
+                dl_max,               # download_max_tariff
+                dl_normal,            # download_normal_tariff
+                dl_min,               # download_min_tariff
+                ul_max,               # upload_max_tariff
+                ul_normal,            # upload_normal_tariff
+                ul_min,               # upload_min_tariff
                 dl_avg,               # download_measured_avg
                 ul_avg,               # upload_measured_avg
                 5,                    # measurement_count
