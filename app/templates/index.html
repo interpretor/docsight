@@ -1676,7 +1676,7 @@
                 <i data-lucide="upload" style="width:14px;height:14px;vertical-align:-2px;"></i> {{ t.bnetz_upload }}
                 <input type="file" accept=".pdf,.csv" id="bnetz-file-input" style="display:none;" onchange="uploadBnetzFromView(this)">
             </label>
-            <button class="refresh-btn" title="{{ t.refresh }}" onclick="loadBnetzData()">&#x1F504;</button>
+            <button class="refresh-btn bnetz-refresh-btn" title="{{ t.refresh }}" onclick="loadBnetzData()"><i data-lucide="refresh-cw"></i></button>
         </div>
     </div>
     <div id="bnetz-watcher-status" style="display:none;padding:8px 14px;margin-bottom:10px;border-radius:8px;background:var(--card-bg);border:1px solid var(--input-border);font-size:0.85em;color:var(--text-muted);align-items:center;gap:8px;">
@@ -1864,7 +1864,7 @@
             <!-- Step 2: Generated complaint text (hidden initially) -->
             <div id="report-step2" style="display:none;">
                 <p style="font-size:13px; color:var(--muted); margin-bottom:8px;">{{ t.report_edit_hint }}</p>
-                <textarea id="report-complaint-text" style="width:100%; min-height:320px; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:12px; font-size:0.85em; font-family:'Consolas','Monaco',monospace; resize:vertical; line-height:1.5;"></textarea>
+                <textarea id="report-complaint-text" style="width:100%; min-height:320px; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:12px; font-size:0.85em; font-family:var(--font-mono); resize:vertical; line-height:1.5;"></textarea>
             </div>
         </div>
         <div class="modal-footer">

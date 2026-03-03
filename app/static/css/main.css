@@ -613,9 +613,10 @@ body.is-offline .offline-banner { display: flex; }
 }
 .channel-table tbody tr { min-height: 44px; }
 .channel-table tbody tr:active { background: rgba(255,255,255,0.04); }
-.channel-table .val-good { color: var(--good); }
-.channel-table .val-warn { color: var(--warn); }
-.channel-table .val-crit { color: var(--crit); }
+/* Value color utilities (used across channel, BNetzA, speedtest tables) */
+.val-good { color: var(--good); }
+.val-warn { color: var(--warn); }
+.val-crit { color: var(--crit); }
 
 .channel-table th:first-child,
 .channel-table td:first-child {
