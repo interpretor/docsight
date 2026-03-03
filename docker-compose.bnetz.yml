@@ -1,12 +1,15 @@
+# DEPRECATED: The fabianbees/breitbandmessung image has been discontinued
+# and is no longer available. This file is kept as a reference for the
+# sidecar integration pattern. See https://github.com/itsDNNS/docsight/discussions/142
+# for community replacement options.
+#
+# The DOCSight side of the integration (file watcher) still works. Any sidecar
+# container that writes BNetzA CSV files to a shared volume can use the same
+# BNETZ_WATCH_ENABLED / BNETZ_WATCH_DIR environment variables shown below.
+#
+# Original description:
 # Optional addon: BNetzA automated measurement sidecar
 # Usage: docker compose -f docker-compose.yml -f docker-compose.bnetz.yml up -d
-#
-# This adds the official Breitbandmessung Desktop App as a sidecar container
-# that runs automated speed measurements according to BNetzA specifications.
-# Results are written to a shared volume that DOCSight watches for auto-import.
-#
-# After first start, open http://localhost:5800 to complete the initial setup
-# of the Breitbandmessung app (accept terms, configure provider/tariff).
 
 services:
   docsight:
