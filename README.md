@@ -302,7 +302,7 @@ If DOCSight helps you, you can support development here:
 
 ## Documentation
 
-Documentation current as of **v2026-03-06.2**.
+Documentation current as of **v2026-03-06.3**.
 
 | Document | Scope |
 |---|---|
