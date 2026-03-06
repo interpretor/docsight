@@ -580,7 +580,7 @@ window.modBackToOverview = modBackToOverview;
 
 /* ── Auto-init ── */
 (function() {
-    var view = document.getElementById('view-mod-docsight-modulation');
+    var view = document.getElementById('view-modulation');
     if (view && view.classList.contains('active')) {
         initModulation();
     }

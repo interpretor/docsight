@@ -10,39 +10,39 @@ class TestModulationNavigation:
     """Sidebar nav → module tab activation."""
 
     def test_sidebar_has_modulation_link(self, demo_page):
-        nav = demo_page.locator('a.nav-item[data-view="mod-docsight-modulation"]')
+        nav = demo_page.locator('a.nav-item[data-view="modulation"]')
         assert nav.count() > 0
 
     def test_sidebar_link_text(self, demo_page):
-        nav = demo_page.locator('a.nav-item[data-view="mod-docsight-modulation"]')
+        nav = demo_page.locator('a.nav-item[data-view="modulation"]')
         text = nav.text_content().strip()
         assert "Modulation" in text
 
     def test_click_opens_modulation_view(self, demo_page):
-        demo_page.locator('a.nav-item[data-view="mod-docsight-modulation"]').click()
-        view = demo_page.locator("#view-mod-docsight-modulation")
+        demo_page.locator('a.nav-item[data-view="modulation"]').click()
+        view = demo_page.locator("#view-modulation")
         expect(view).to_be_visible()
 
     def test_modulation_nav_marked_active(self, demo_page):
-        demo_page.locator('a.nav-item[data-view="mod-docsight-modulation"]').click()
-        nav = demo_page.locator('a.nav-item[data-view="mod-docsight-modulation"]')
+        demo_page.locator('a.nav-item[data-view="modulation"]').click()
+        nav = demo_page.locator('a.nav-item[data-view="modulation"]')
         assert "active" in nav.get_attribute("class")
 
     def test_live_view_hidden_when_modulation_active(self, demo_page):
-        demo_page.locator('a.nav-item[data-view="mod-docsight-modulation"]').click()
+        demo_page.locator('a.nav-item[data-view="modulation"]').click()
         live = demo_page.locator("#view-dashboard")
         expect(live).not_to_be_visible()
 
     def test_switch_back_to_live(self, demo_page):
-        demo_page.locator('a.nav-item[data-view="mod-docsight-modulation"]').click()
+        demo_page.locator('a.nav-item[data-view="modulation"]').click()
         demo_page.locator('a.nav-item[data-view="live"]').click()
         live = demo_page.locator("#view-dashboard")
         expect(live).to_be_visible()
 
     def test_hash_routing(self, page, live_server):
-        page.goto(f"{live_server}#mod-docsight-modulation")
+        page.goto(f"{live_server}#modulation")
         page.wait_for_load_state("networkidle")
-        view = page.locator("#view-mod-docsight-modulation")
+        view = page.locator("#view-modulation")
         expect(view).to_be_visible()
 
 
@@ -53,12 +53,12 @@ class TestModulationTabStructure:
 
     @pytest.fixture(autouse=True)
     def navigate_to_modulation(self, demo_page):
-        demo_page.locator('a.nav-item[data-view="mod-docsight-modulation"]').click()
+        demo_page.locator('a.nav-item[data-view="modulation"]').click()
         demo_page.wait_for_timeout(500)
         self.page = demo_page
 
     def test_has_title(self):
-        title = self.page.locator("#view-mod-docsight-modulation h2")
+        title = self.page.locator("#view-modulation h2")
         assert title.count() > 0
         assert "Modulation" in title.text_content()
 
@@ -102,7 +102,7 @@ class TestModulationControls:
 
     @pytest.fixture(autouse=True)
     def navigate_to_modulation(self, demo_page):
-        demo_page.locator('a.nav-item[data-view="mod-docsight-modulation"]').click()
+        demo_page.locator('a.nav-item[data-view="modulation"]').click()
         demo_page.wait_for_timeout(500)
         self.page = demo_page
 
@@ -211,7 +211,7 @@ class TestModulationKPIs:
 
     @pytest.fixture(autouse=True)
     def navigate_to_modulation(self, demo_page):
-        demo_page.locator('a.nav-item[data-view="mod-docsight-modulation"]').click()
+        demo_page.locator('a.nav-item[data-view="modulation"]').click()
         demo_page.wait_for_timeout(1500)
         self.page = demo_page
 
@@ -245,7 +245,7 @@ class TestProtocolGroups:
 
     @pytest.fixture(autouse=True)
     def navigate_to_modulation(self, demo_page):
-        demo_page.locator('a.nav-item[data-view="mod-docsight-modulation"]').click()
+        demo_page.locator('a.nav-item[data-view="modulation"]').click()
         demo_page.wait_for_timeout(1500)
         self.page = demo_page
 
@@ -278,7 +278,7 @@ class TestNoConsoleErrors:
     def test_no_errors_on_load(self, page, live_server):
         errors = []
         page.on("pageerror", lambda err: errors.append(str(err)))
-        page.goto(f"{live_server}#mod-docsight-modulation")
+        page.goto(f"{live_server}#modulation")
         page.wait_for_load_state("networkidle")
         page.wait_for_timeout(2000)
         assert len(errors) == 0, f"JS errors: {errors}"

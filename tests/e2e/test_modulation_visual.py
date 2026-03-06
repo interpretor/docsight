@@ -22,7 +22,7 @@ def ensure_screenshot_dir():
 @pytest.fixture()
 def modulation_page(demo_page):
     """Navigate to modulation tab and wait for data to load."""
-    demo_page.locator('a.nav-item[data-view="mod-docsight-modulation"]').click()
+    demo_page.locator('a.nav-item[data-view="modulation"]').click()
     demo_page.wait_for_timeout(2000)  # Wait for API + Chart.js render
     return demo_page
 
@@ -31,7 +31,7 @@ def modulation_page(demo_page):
 def modulation_page_mobile(page, live_server):
     """Mobile viewport on modulation tab."""
     page.set_viewport_size({"width": 375, "height": 812})
-    page.goto(f"{live_server}#mod-docsight-modulation")
+    page.goto(f"{live_server}#modulation")
     page.wait_for_load_state("networkidle")
     page.wait_for_timeout(2000)
     return page
@@ -47,7 +47,7 @@ class TestFullPageScreenshots:
             path=os.path.join(SCREENSHOT_DIR, "desktop_us_7d.png"),
             full_page=False,
         )
-        view = modulation_page.locator("#view-mod-docsight-modulation")
+        view = modulation_page.locator("#view-modulation")
         expect(view).to_be_visible()
 
     def test_screenshot_desktop_ds_7d(self, modulation_page):
@@ -236,7 +236,7 @@ class TestThemeConsistency:
         assert val.is_visible()
 
     def test_chart_cards_have_border(self, modulation_page):
-        cards = modulation_page.locator("#view-mod-docsight-modulation .chart-card")
+        cards = modulation_page.locator("#view-modulation .chart-card")
         assert cards.count() >= 2
 
 
@@ -246,14 +246,14 @@ class TestModulationI18n:
     """Module labels should be translated."""
 
     def test_english_labels(self, page, live_server):
-        page.goto(f"{live_server}#mod-docsight-modulation")
+        page.goto(f"{live_server}#modulation")
         page.wait_for_load_state("networkidle")
-        content = page.locator("#view-mod-docsight-modulation").text_content()
+        content = page.locator("#view-modulation").text_content()
         assert "Modulation Performance" in content or "Modulation" in content
 
     def test_german_labels(self, page, live_server):
-        page.goto(f"{live_server}?lang=de#mod-docsight-modulation")
+        page.goto(f"{live_server}?lang=de#modulation")
         page.wait_for_load_state("networkidle")
         page.wait_for_timeout(500)
-        content = page.locator("#view-mod-docsight-modulation").text_content()
+        content = page.locator("#view-modulation").text_content()
         assert "Modulationsleistung" in content or "Modulation" in content

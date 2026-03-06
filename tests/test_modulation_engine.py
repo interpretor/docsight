@@ -492,7 +492,19 @@ class TestComputeDistributionV2:
         snaps = [_make_snapshot("2026-03-01T10:00:00Z", us_channels=us_channels)]
         result = compute_distribution_v2(snaps, "us", "UTC")
         pg = result["protocol_groups"][0]
-        assert pg["degraded_channel_count"] == 1  # Ch 3 at 16QAM < 64QAM
+        assert pg["degraded_channel_count"] == 1  # Ch 3 at 16QAM <= threshold(16)
+
+    def test_ds_64qam_not_degraded(self):
+        """DS 3.0 channels at 64QAM must NOT be counted as degraded (issue fix)."""
+        ds_channels = [
+            {"channel_id": 1, "modulation": "256QAM", "docsis_version": "3.0"},
+            {"channel_id": 2, "modulation": "64QAM", "docsis_version": "3.0"},
+            {"channel_id": 3, "modulation": "64QAM", "docsis_version": "3.0"},
+        ]
+        snaps = [_make_snapshot("2026-03-01T10:00:00Z", ds_channels=ds_channels)]
+        result = compute_distribution_v2(snaps, "ds", "UTC")
+        pg = result["protocol_groups"][0]
+        assert pg["degraded_channel_count"] == 0  # 64QAM > threshold(16)
 
     def test_dominant_modulation(self):
         snaps = [
@@ -584,6 +596,18 @@ class TestComputeIntraday:
         ch = result["protocol_groups"][0]["channels"][0]
         assert ch["degraded"] is False
         assert ch["health_index"] == 100.0
+        assert ch["summary"] == ""
+
+    def test_ds_64qam_not_degraded_intraday(self):
+        """DS 3.0 channel at 64QAM must not be flagged degraded in intraday."""
+        snaps = [
+            _make_snapshot("2026-03-01T10:00:00Z",
+                           ds_channels=[{"channel_id": 1, "modulation": "64QAM",
+                                         "docsis_version": "3.0", "frequency": "500.000"}]),
+        ]
+        result = compute_intraday(snaps, "ds", "UTC", "2026-03-01")
+        ch = result["protocol_groups"][0]["channels"][0]
+        assert ch["degraded"] is False
         assert ch["summary"] == ""
 
     def test_multi_protocol_groups(self):

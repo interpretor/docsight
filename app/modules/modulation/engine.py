@@ -303,8 +303,7 @@ def _build_protocol_group(version, direction, by_date, sorted_dates, threshold):
 
 
 def _count_degraded_channels_day(snapshot_groups, version, direction, threshold):
-    """Count how many channels had any observation below max QAM for the day."""
-    max_qam = MAX_QAM.get((direction, version), 4096)
+    """Count how many channels had any observation at or below the low-QAM threshold."""
     degraded = set()
     for channels in snapshot_groups:
         for ch in channels:
@@ -312,14 +311,13 @@ def _count_degraded_channels_day(snapshot_groups, version, direction, threshold)
                 continue
             mod_str = ch.get("modulation") or ch.get("type") or ""
             _, qam = _canonical_label(mod_str)
-            if qam is not None and qam < max_qam:
+            if qam is not None and qam <= threshold:
                 degraded.add(ch.get("channel_id"))
     return len(degraded)
 
 
 def _count_degraded_channels_overall(by_date, sorted_dates, version, direction, threshold):
     """Count channels that were degraded on any day in the range."""
-    max_qam = MAX_QAM.get((direction, version), 4096)
     degraded = set()
     for date_str in sorted_dates:
         for channels in by_date[date_str]:
@@ -328,7 +326,7 @@ def _count_degraded_channels_overall(by_date, sorted_dates, version, direction, 
                     continue
                 mod_str = ch.get("modulation") or ch.get("type") or ""
                 _, qam = _canonical_label(mod_str)
-                if qam is not None and qam < max_qam:
+                if qam is not None and qam <= threshold:
                     degraded.add(ch.get("channel_id"))
     return len(degraded)
 
@@ -400,8 +398,8 @@ def compute_intraday(snapshots, direction, tz_name, date_str, low_qam_threshold=
             hi = _health_index_for_group(
                 [(l, q) for _, l, q in timeline], direction, version
             )
-            degraded = any(q is not None and q < max_qam for _, _, q in timeline)
-            summary = _channel_summary(periods, max_qam)
+            degraded = any(q is not None and q <= low_qam_threshold for _, _, q in timeline)
+            summary = _channel_summary(periods, max_qam, low_qam_threshold)
 
             # Simplify timeline to transition points only
             simplified = _simplify_timeline(timeline)
@@ -477,14 +475,14 @@ def _simplify_timeline(timeline):
     return result
 
 
-def _channel_summary(periods, max_qam):
+def _channel_summary(periods, max_qam, threshold=16):
     """Generate human-readable summary of degraded periods for a channel.
 
     Example: "4.5h (30%) at 16QAM between 14:00–18:30"
-    Returns empty string if channel was always at max QAM.
+    Returns empty string if channel never hit the low-QAM threshold.
     """
     degraded_periods = [
-        p for p in periods if p[3] is not None and p[3] < max_qam
+        p for p in periods if p[3] is not None and p[3] <= threshold
     ]
     if not degraded_periods:
         return ""

@@ -71,6 +71,11 @@
             <i data-lucide="bell"></i> {{ t.event_log }}
             <span class="nav-badge" id="event-badge" style="display:none;"></span>
         </a>
+        {% if modules|selectattr('id', 'equalto', 'docsight.modulation')|list %}
+        <a class="nav-item" data-view="modulation">
+            <i data-lucide="bar-chart-3"></i> {{ t.get('docsight.modulation.title', 'Modulation Performance') }}
+        </a>
+        {% endif %}
         <a class="nav-item" data-view="trends">
             <i data-lucide="trending-up"></i> {{ t.signal_trends }}
         </a>
@@ -85,11 +90,6 @@
         {% if gaming_quality_enabled %}
         <a class="nav-item" data-view="gaming">
             <i data-lucide="gamepad-2"></i> {{ t.gaming_quality_label }}
-        </a>
-        {% endif %}
-        {% if modules|selectattr('id', 'equalto', 'docsight.modulation')|list %}
-        <a class="nav-item" data-view="mod-docsight-modulation">
-            <i data-lucide="bar-chart-3"></i> {{ t.get('docsight.modulation.title', 'Modulation Performance') }}
         </a>
         {% endif %}
         <div class="nav-group-label">{{ t.sidebar_external }}</div>
@@ -1740,7 +1740,7 @@
    MODULE VIEWS - Dynamically rendered from enabled modules with tab template
    ══════════════════════════════════════════════════════════════════════════ #}
 {% for mod in modules if mod.template_paths.get('tab') %}
-<div id="view-mod-{{ mod.id|replace('.', '-') }}" class="view">
+<div id="{% if mod.id == 'docsight.modulation' %}view-modulation{% else %}view-mod-{{ mod.id|replace('.', '-') }}{% endif %}" class="view">
     {% include mod.template_paths['tab'] %}
 </div>
 {% endfor %}
@@ -2229,7 +2229,7 @@ var T = {{ t|tojson }};
         } else if (view === 'trends') {
             if (typeof updateTrendTabs === 'function') updateTrendTabs();
             if (typeof loadTrends === 'function') loadTrends(_trendRange);
-        } else if (view === 'mod-docsight-modulation') {
+        } else if (view === 'modulation') {
             if (typeof initModulation === 'function') initModulation();
         }
 
