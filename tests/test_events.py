@@ -183,15 +183,15 @@ class TestEventDetector:
 
     def test_health_change_detected(self, detector):
         detector.check(_make_analysis(health="good"))
-        events = detector.check(_make_analysis(health="poor"))
+        events = detector.check(_make_analysis(health="critical"))
         assert len(events) == 1
         assert events[0]["event_type"] == "health_change"
         assert events[0]["severity"] == "critical"
         assert "good" in events[0]["message"]
-        assert "poor" in events[0]["message"]
+        assert "critical" in events[0]["message"]
 
     def test_health_recovery_detected(self, detector):
-        detector.check(_make_analysis(health="poor"))
+        detector.check(_make_analysis(health="critical"))
         events = detector.check(_make_analysis(health="good"))
         assert len(events) == 1
         assert events[0]["event_type"] == "health_change"

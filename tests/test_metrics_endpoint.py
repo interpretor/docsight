@@ -130,7 +130,7 @@ class TestMetricsEndpoint:
         resp = metrics_client.get("/metrics")
         assert resp.status_code == 200
         body = resp.data.decode("utf-8")
-        assert "docsight_health_status 3" in body
+        assert "docsight_health_status 4" in body
 
     def test_with_data_returns_channel_metrics(self, metrics_client_with_data):
         """With analysis populated, response contains per-channel metrics and health_status 0."""
