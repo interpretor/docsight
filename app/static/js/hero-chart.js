@@ -167,20 +167,7 @@
             axes: [
                 {
                     scale: 'x',
-                    space: 50,
-                    splits: function() { var o = []; for (var j = 0; j < n; j++) o.push(j); return o; },
-                    filter: function(u, splits) {
-                        var max = Math.floor(width / 55);
-                        if (max < 2) max = 2;
-                        var step = Math.ceil(n / max);
-                        return splits.filter(function(v) { return v >= 0 && v < n && v % step === 0; });
-                    },
-                    values: function(u, vals) { return vals.map(function(v) { return xLabels[v] || ''; }); },
-                    stroke: c.textMuted,
-                    grid: { stroke: c.grid, width: 1 },
-                    ticks: { stroke: c.grid, width: 1 },
-                    font: '10px system-ui',
-                    gap: 2
+                    show: false
                 },
                 {
                     scale: 'power',
