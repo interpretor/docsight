@@ -392,7 +392,10 @@
                 <span class="metric-label">{{ t.signal_ds_power }}</span>
                 <div class="metric-icon purple"><i data-lucide="arrow-down"></i></div>
             </div>
-            <div class="metric-value" style="color:var(--{{ ds_pwr_health }});">{{ s.ds_power_avg }}<span class="unit">dBmV</span></div>
+            <div class="metric-value-row">
+                <div class="metric-value" style="color:var(--{{ ds_pwr_health }});">{{ s.ds_power_avg }}<span class="unit">dBmV</span></div>
+                <canvas class="metric-spark" id="spark-ds-power" width="144" height="56"></canvas>
+            </div>
             <div class="metric-sub">
                 <span class="badge badge-{{ ds_pwr_health }}">{{ health_labels[ds_pwr_health] }}</span>
                 <span class="range">{{ s.ds_power_min }} — {{ s.ds_power_max }}</span>
@@ -405,7 +408,10 @@
                 <span class="metric-label">{{ t.signal_us_power }}</span>
                 <div class="metric-icon blue"><i data-lucide="arrow-up"></i></div>
             </div>
-            <div class="metric-value" style="color:var(--{{ us_health }});">{{ s.us_power_avg }}<span class="unit">dBmV</span></div>
+            <div class="metric-value-row">
+                <div class="metric-value" style="color:var(--{{ us_health }});">{{ s.us_power_avg }}<span class="unit">dBmV</span></div>
+                <canvas class="metric-spark" id="spark-us-power" width="144" height="56"></canvas>
+            </div>
             <div class="metric-sub">
                 <span class="badge badge-{{ us_health }}">{{ health_labels[us_health] }}</span>
                 <span class="range">{{ s.us_power_min }} — {{ s.us_power_max }}</span>
@@ -418,7 +424,10 @@
                 <span class="metric-label">SNR</span>
                 <div class="metric-icon green"><i data-lucide="signal"></i></div>
             </div>
-            <div class="metric-value" style="color:var(--{{ snr_health }});">{{ s.ds_snr_avg }}<span class="unit">dB</span></div>
+            <div class="metric-value-row">
+                <div class="metric-value" style="color:var(--{{ snr_health }});">{{ s.ds_snr_avg }}<span class="unit">dB</span></div>
+                <canvas class="metric-spark" id="spark-snr" width="144" height="56"></canvas>
+            </div>
             <div class="metric-sub">
                 <span class="badge badge-{{ snr_health }}">{{ health_labels[snr_health] }}</span>
                 <span class="range">{{ s.ds_snr_min }} — {{ s.ds_snr_max }}</span>
@@ -431,7 +440,10 @@
                 <span class="metric-label">{{ t.card_errors }}</span>
                 <div class="metric-icon amber"><i data-lucide="alert-triangle"></i></div>
             </div>
-            <div class="metric-value" style="color:var(--{{ error_health }});">{{ s.ds_uncorr_pct }}<span class="unit">%</span></div>
+            <div class="metric-value-row">
+                <div class="metric-value" style="color:var(--{{ error_health }});">{{ s.ds_uncorr_pct }}<span class="unit">%</span></div>
+                <canvas class="metric-spark" id="spark-errors" width="144" height="56"></canvas>
+            </div>
             <div class="metric-sub">
                 <span class="badge badge-{{ error_health }}">{{ health_labels[error_health] }}</span>
                 <span class="range">{{ s.ds_correctable_errors|fmt_k }} {{ t.corr }} / {{ s.ds_uncorrectable_errors|fmt_k }} {{ t.uncorr }}</span>
@@ -1948,6 +1960,7 @@
 <script src="/static/vendor/chart.umd.min.js"></script>
 <script src="/static/vendor/chartjs-adapter-date-fns.bundle.min.js"></script>
 <script src="{{ url_for('static', filename='js/hero-chart.js') }}"></script>
+<script src="{{ url_for('static', filename='js/sparklines.js') }}"></script>
 
 {# ── Channel Health Donut Charts - Phase 3 Task 3.4 ── #}
 <script>
@@ -2349,6 +2362,11 @@ var T = {{ t|tojson }};
                 // Re-init hero chart (Chart.js instance lost on innerHTML replace)
                 if (typeof window.refreshHeroChart === 'function') {
                     window.refreshHeroChart();
+                }
+
+                // Re-init sparklines (canvas lost on innerHTML replace)
+                if (typeof window.refreshSparklines === 'function') {
+                    window.refreshSparklines();
                 }
 
                 // Re-init channel health donuts (Chart.js instances lost on innerHTML replace)
