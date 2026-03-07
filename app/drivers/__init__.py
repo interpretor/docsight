@@ -28,6 +28,9 @@ driver_registry.register_builtin("surfboard", "app.drivers.surfboard.SurfboardDr
 driver_registry.register_builtin("cm8200", "app.drivers.cm8200.CM8200Driver",
                                  "Arris Touchstone CM8200A",
                                  hints={"default_url": "https://192.168.100.1", "default_user": "admin"})
+driver_registry.register_builtin("hitron", "app.drivers.hitron.HitronDriver",
+                                 "Hitron CODA-56",
+                                 hints={"default_url": "http://192.168.100.1", "credentials_required": False})
 driver_registry.register_builtin("generic", "app.drivers.generic.GenericDriver", "Generic Router (No DOCSIS)",
                                  hints={"credentials_required": False})
 
