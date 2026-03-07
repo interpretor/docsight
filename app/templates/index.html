@@ -2281,10 +2281,9 @@ var T = {{ t|tojson }};
     var countdownSeconds = 60;
     var secondsSinceUpdate = 0;
     var REFRESH_INTERVAL = 60;
-    var countdownEl = document.getElementById('topbar-countdown');
-    var desktopCountdownEl = document.getElementById('desktop-countdown');
-
     function updateCountdown() {
+        var countdownEl = document.getElementById('topbar-countdown');
+        var desktopCountdownEl = document.getElementById('desktop-countdown');
         if (countdownEl) countdownEl.textContent = countdownSeconds + 's';
         if (desktopCountdownEl) desktopCountdownEl.textContent = countdownSeconds + 's';
     }
