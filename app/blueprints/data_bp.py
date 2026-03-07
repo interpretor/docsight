@@ -15,6 +15,30 @@ from app.gaming_index import compute_gaming_index
 
 log = logging.getLogger("docsis.web")
 
+_ISSUE_LABELS = {
+    "ds_power_critical": "Downstream power out of spec",
+    "ds_power_marginal": "Downstream power approaching limits",
+    "ds_power_tolerated": "Downstream power slightly out of spec",
+    "us_power_critical_low": "Upstream power critically low",
+    "us_power_critical_high": "Upstream power critically high",
+    "us_power_marginal_low": "Upstream power below acceptable",
+    "us_power_marginal_high": "Upstream power elevated",
+    "us_power_tolerated_low": "Upstream power slightly low",
+    "us_power_tolerated_high": "Upstream power slightly high",
+    "snr_critical": "Signal-to-noise ratio critically low",
+    "snr_marginal": "Signal-to-noise ratio below acceptable",
+    "snr_tolerated": "Signal-to-noise ratio slightly below ideal",
+    "us_modulation_critical": "Upstream modulation critically degraded",
+    "us_modulation_marginal": "Upstream modulation degraded",
+    "uncorr_errors_high": "High uncorrectable errors",
+    "uncorr_errors_critical": "Uncorrectable error rate critical",
+}
+
+
+def _translate_issue(key: str) -> str:
+    return _ISSUE_LABELS.get(key, key.replace("_", " ").title())
+
+
 data_bp = Blueprint("data_bp", __name__)
 
 
@@ -90,7 +114,7 @@ def api_export():
         f"- **ISP**: {isp}" if isp else None,
         f"- **Tariff**: {ds_mbps}/{us_mbps} Mbit/s (Down/Up)" if ds_mbps else None,
         f"- **Health**: {s.get('health', 'Unknown')}",
-        f"- **Issues**: {', '.join(s.get('health_issues', []))}" if s.get('health_issues') else None,
+        f"- **Issues**: {', '.join(_translate_issue(i) for i in s.get('health_issues', []))}" if s.get('health_issues') else None,
         f"- **Timestamp**: {ts}",
         "",
         "## Summary",

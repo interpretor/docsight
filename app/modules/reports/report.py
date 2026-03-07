@@ -214,6 +214,24 @@ REPORT_STRINGS = {
             "Under Section 57(4) TKG, the consistently measured speeds fall below the contractually "
             "guaranteed service levels, establishing grounds for fee reduction or contract termination."
         ),
+        "issue_labels": {
+            "ds_power_critical": "Downstream power out of spec",
+            "ds_power_marginal": "Downstream power approaching limits",
+            "ds_power_tolerated": "Downstream power slightly out of spec",
+            "us_power_critical_low": "Upstream power critically low",
+            "us_power_critical_high": "Upstream power critically high",
+            "us_power_marginal_low": "Upstream power below acceptable",
+            "us_power_marginal_high": "Upstream power elevated",
+            "us_power_tolerated_low": "Upstream power slightly low",
+            "us_power_tolerated_high": "Upstream power slightly high",
+            "snr_critical": "SNR critically low",
+            "snr_marginal": "SNR below acceptable",
+            "snr_tolerated": "SNR slightly below ideal",
+            "us_modulation_critical": "Upstream modulation critically degraded",
+            "us_modulation_marginal": "Upstream modulation degraded",
+            "uncorr_errors_high": "High uncorrectable errors",
+            "uncorr_errors_critical": "Uncorrectable error rate critical",
+        },
     },
     "de": {
         "report_title": "DOCSight Störungsbericht",
@@ -289,15 +307,15 @@ REPORT_STRINGS = {
             "diese Angelegenheit an die Bundesnetzagentur weiterzuleiten, sofern das Problem nicht "
             "innerhalb einer angemessenen Frist behoben wird."
         ),
-        "complaint_closing_label": "Mit freundlichen Grüßen,",
-        "complaint_closing": "Mit freundlichen Grüßen,\n[Ihr Name]\n[Kundennummer]\n[Adresse]",
+        "complaint_closing_label": "Mit freundlichen Grüßen",
+        "complaint_closing": "Mit freundlichen Grüßen\n[Ihr Name]\n[Kundennummer]\n[Adresse]",
         "complaint_short_subject": "Betreff: DOCSIS-Signalqualitätsprobleme",
         "complaint_short_greeting": "Sehr geehrte Damen und Herren,",
         "complaint_short_body": (
             "ich habe anhaltende Signalqualitätsprobleme mit meinem Kabelinternetanschluss. "
             "Bitte entnehmen Sie die Details den beigefügten Überwachungsdaten."
         ),
-        "complaint_short_closing": "Mit freundlichen Grüßen,\n[Ihr Name]",
+        "complaint_short_closing": "Mit freundlichen Grüßen\n[Ihr Name]",
         # Incident-scoped report
         "incident_report_title": "DOCSight Beschwerdebericht",
         "section_incident_summary": "Zusammenfassung",
@@ -331,6 +349,24 @@ REPORT_STRINGS = {
             "Gemäß § 57 Abs. 4 TKG unterschreiten die gemessenen Geschwindigkeiten dauerhaft die vertraglich "
             "zugesicherten Leistungswerte, was eine Grundlage für Entgeltminderung oder Vertragskündigung darstellt."
         ),
+        "issue_labels": {
+            "ds_power_critical": "Downstream-Pegel außerhalb der Spezifikation",
+            "ds_power_marginal": "Downstream-Pegel nähert sich Grenzwerten",
+            "ds_power_tolerated": "Downstream-Pegel leicht außerhalb der Norm",
+            "us_power_critical_low": "Upstream-Sendeleistung kritisch niedrig",
+            "us_power_critical_high": "Upstream-Sendeleistung kritisch hoch",
+            "us_power_marginal_low": "Upstream-Sendeleistung unter dem akzeptablen Bereich",
+            "us_power_marginal_high": "Upstream-Sendeleistung erhöht",
+            "us_power_tolerated_low": "Upstream-Sendeleistung leicht niedrig",
+            "us_power_tolerated_high": "Upstream-Sendeleistung leicht hoch",
+            "snr_critical": "Signal-Rausch-Verhältnis kritisch niedrig",
+            "snr_marginal": "Signal-Rausch-Verhältnis unter dem akzeptablen Bereich",
+            "snr_tolerated": "Signal-Rausch-Verhältnis leicht unter dem Ideal",
+            "us_modulation_critical": "Upstream-Modulation kritisch herabgesetzt",
+            "us_modulation_marginal": "Upstream-Modulation herabgesetzt",
+            "uncorr_errors_high": "Hohe Anzahl unkorrigierbarer Fehler",
+            "uncorr_errors_critical": "Unkorrigierbare Fehlerrate kritisch",
+        },
     },
     "fr": {
         "report_title": "DOCSight Rapport d'incident",
@@ -449,6 +485,24 @@ REPORT_STRINGS = {
             "les débits mesurés sont systématiquement inférieurs aux niveaux de service contractuels, "
             "établissant un fondement pour une réduction tarifaire ou la résiliation du contrat."
         ),
+        "issue_labels": {
+            "ds_power_critical": "Puissance descendante hors spécification",
+            "ds_power_marginal": "Puissance descendante proche des limites",
+            "ds_power_tolerated": "Puissance descendante légèrement hors norme",
+            "us_power_critical_low": "Puissance montante critique (trop basse)",
+            "us_power_critical_high": "Puissance montante critique (trop haute)",
+            "us_power_marginal_low": "Puissance montante en dessous de l'acceptable",
+            "us_power_marginal_high": "Puissance montante élevée",
+            "us_power_tolerated_low": "Puissance montante légèrement basse",
+            "us_power_tolerated_high": "Puissance montante légèrement haute",
+            "snr_critical": "Rapport signal/bruit critique",
+            "snr_marginal": "Rapport signal-bruit en dessous de l'acceptable",
+            "snr_tolerated": "Rapport signal-bruit légèrement sous l'idéal",
+            "us_modulation_critical": "Modulation montante critiquement dégradée",
+            "us_modulation_marginal": "Modulation montante dégradée",
+            "uncorr_errors_high": "Nombre élevé d'erreurs non corrigeables",
+            "uncorr_errors_critical": "Taux d'erreurs non corrigeables critique",
+        },
     },
     "es": {
         "report_title": "DOCSight Informe de incidencia",
@@ -568,6 +622,24 @@ REPORT_STRINGS = {
             "medidas se encuentran por debajo de los niveles contractuales, lo que constituye fundamento "
             "para una reducción de la tarifa o la terminación del contrato."
         ),
+        "issue_labels": {
+            "ds_power_critical": "Potencia descendente fuera de especificación",
+            "ds_power_marginal": "Potencia descendente acercándose a los límites",
+            "ds_power_tolerated": "Potencia descendente ligeramente fuera de norma",
+            "us_power_critical_low": "Potencia ascendente críticamente baja",
+            "us_power_critical_high": "Potencia ascendente críticamente alta",
+            "us_power_marginal_low": "Potencia ascendente por debajo de lo aceptable",
+            "us_power_marginal_high": "Potencia ascendente elevada",
+            "us_power_tolerated_low": "Potencia ascendente ligeramente baja",
+            "us_power_tolerated_high": "Potencia ascendente ligeramente alta",
+            "snr_critical": "Relación señal/ruido críticamente baja",
+            "snr_marginal": "Relación señal-ruido por debajo de lo aceptable",
+            "snr_tolerated": "Relación señal-ruido ligeramente por debajo del ideal",
+            "us_modulation_critical": "Modulación ascendente críticamente degradada",
+            "us_modulation_marginal": "Modulación ascendente degradada",
+            "uncorr_errors_high": "Alto número de errores no corregibles",
+            "uncorr_errors_critical": "Tasa de errores no corregibles crítica",
+        },
     },
 }
 
@@ -749,7 +821,9 @@ def generate_report(snapshots, current_analysis, config=None, connection_info=No
         pdf.set_text_color(0, 0, 0)
         if sm.get("health_issues"):
             pdf.set_font("dejavu", "", 10)
-            pdf.cell(0, 6, f"{s['issues']}: {', '.join(sm['health_issues'])}", new_x="LMARGIN", new_y="NEXT")
+            labels = s.get("issue_labels", {})
+            translated = [labels.get(i, i) for i in sm["health_issues"]]
+            pdf.cell(0, 6, f"{s['issues']}: {', '.join(translated)}", new_x="LMARGIN", new_y="NEXT")
         pdf.ln(2)
 
         # Current channel table
