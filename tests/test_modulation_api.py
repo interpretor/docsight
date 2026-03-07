@@ -23,7 +23,7 @@ _ensure_blueprint()
 def config_mgr(tmp_path):
     data_dir = str(tmp_path / "data")
     mgr = ConfigManager(data_dir)
-    mgr.save({"modem_password": "test", "timezone": "UTC"})
+    mgr.save({"modem_password": "test", "modem_type": "fritzbox", "timezone": "UTC"})
     return mgr
 
 

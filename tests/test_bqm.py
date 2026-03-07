@@ -178,7 +178,7 @@ def bqm_client(tmp_path, bqm_api_storage):
     s, today = bqm_api_storage
     data_dir = str(tmp_path / "data")
     mgr = ConfigManager(data_dir)
-    mgr.save({"modem_password": "test", "bqm_url": "https://example.com/graph.png"})
+    mgr.save({"modem_password": "test", "modem_type": "fritzbox", "bqm_url": "https://example.com/graph.png"})
     init_config(mgr)
     init_storage(s)
     _reset_bqm_module_storage()
@@ -216,7 +216,7 @@ class TestBQMAPI:
     def test_bqm_dates_empty(self, tmp_path):
         data_dir = str(tmp_path / "data3")
         mgr = ConfigManager(data_dir)
-        mgr.save({"modem_password": "test"})
+        mgr.save({"modem_password": "test", "modem_type": "fritzbox"})
         init_config(mgr)
         init_storage(None)
         _reset_bqm_module_storage()
@@ -266,7 +266,7 @@ class TestBQMLive:
 
         data_dir = str(tmp_path / "data_live")
         mgr = ConfigManager(data_dir)
-        mgr.save({"modem_password": "test", "bqm_url": "https://example.com/graph.png"})
+        mgr.save({"modem_password": "test", "modem_type": "fritzbox", "bqm_url": "https://example.com/graph.png"})
         init_config(mgr)
         init_storage(None)
         _reset_bqm_module_storage()

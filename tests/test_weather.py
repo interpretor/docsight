@@ -269,7 +269,7 @@ class TestWeatherAPI:
 
         data_dir = str(tmp_path / "data_w")
         mgr = ConfigManager(data_dir)
-        mgr.save({"modem_password": "test", "weather_enabled": True,
+        mgr.save({"modem_password": "test", "modem_type": "fritzbox", "weather_enabled": True,
                    "weather_latitude": "52.52", "weather_longitude": "13.41"})
         init_config(mgr)
         from app.storage import SnapshotStorage
@@ -338,7 +338,7 @@ class TestWeatherAPI:
         from app.modules.weather import routes as weather_routes
         weather_routes._storage = None
         mgr = ConfigManager(str(tmp_path / "data_nc"))
-        mgr.save({"modem_password": "test"})
+        mgr.save({"modem_password": "test", "modem_type": "fritzbox"})
         init_config(mgr)
         init_storage(None)
         app.config["TESTING"] = True

@@ -14,7 +14,7 @@ from app.modules.speedtest.storage import SpeedtestStorage
 def config_mgr(tmp_path):
     data_dir = str(tmp_path / "data")
     mgr = ConfigManager(data_dir)
-    mgr.save({"modem_password": "test", "isp_name": "Vodafone"})
+    mgr.save({"modem_password": "test", "modem_type": "fritzbox", "isp_name": "Vodafone"})
     return mgr
 
 
@@ -100,7 +100,7 @@ class TestIndexRoute:
     def test_index_with_incomplete_bnetz(self, tmp_path, sample_analysis):
         """Dashboard hides BNetzA card when entry has NULL fields (#148)."""
         mgr = ConfigManager(str(tmp_path / "data_bnetz"))
-        mgr.save({"modem_password": "test"})
+        mgr.save({"modem_password": "test", "modem_type": "fritzbox"})
         init_config(mgr)
         storage = SnapshotStorage(str(tmp_path / "data_bnetz" / "docsight.db"))
         init_storage(storage)
@@ -704,7 +704,7 @@ class TestSpeedtestDetailAPI:
         """Issue #113: speedtest responses should include classification fields."""
         self._reset_speedtest_module()
         mgr = ConfigManager(str(tmp_path / "data_sq"))
-        mgr.save({"modem_password": "test", "booked_download": 1000, "booked_upload": 50})
+        mgr.save({"modem_password": "test", "modem_type": "fritzbox", "booked_download": 1000, "booked_upload": 50})
         init_config(mgr)
         db_path = str(tmp_path / "sq.db")
         storage = SnapshotStorage(db_path, max_days=7)
@@ -731,7 +731,7 @@ class TestSpeedtestDetailAPI:
     def test_speedtest_quality_warn_and_poor(self, tmp_path):
         self._reset_speedtest_module()
         mgr = ConfigManager(str(tmp_path / "data_sq2"))
-        mgr.save({"modem_password": "test", "booked_download": 1000, "booked_upload": 100})
+        mgr.save({"modem_password": "test", "modem_type": "fritzbox", "booked_download": 1000, "booked_upload": 100})
         init_config(mgr)
         db_path = str(tmp_path / "sq2.db")
         storage = SnapshotStorage(db_path, max_days=7)

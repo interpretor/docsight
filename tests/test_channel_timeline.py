@@ -50,7 +50,7 @@ def client(tmp_path):
     s = SnapshotStorage(db_path, max_days=30)
     data_dir = str(tmp_path / "data")
     mgr = ConfigManager(data_dir)
-    mgr.save({"modem_password": "test"})
+    mgr.save({"modem_password": "test", "modem_type": "fritzbox"})
     init_config(mgr)
     init_storage(s)
     app.config["TESTING"] = True
@@ -186,7 +186,7 @@ class TestChannelHistoryEndpoint:
     def test_no_storage(self, tmp_path):
         data_dir = str(tmp_path / "data2")
         mgr = ConfigManager(data_dir)
-        mgr.save({"modem_password": "test"})
+        mgr.save({"modem_password": "test", "modem_type": "fritzbox"})
         init_config(mgr)
         init_storage(None)
         app.config["TESTING"] = True

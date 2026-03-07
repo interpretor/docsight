@@ -148,18 +148,19 @@ class TestSpeedtestClient:
 class TestSpeedtestConfig:
     def test_is_speedtest_configured_false(self, tmp_path):
         mgr = ConfigManager(str(tmp_path / "data"))
-        mgr.save({"modem_password": "test"})
+        mgr.save({"modem_password": "test", "modem_type": "fritzbox"})
         assert not mgr.is_speedtest_configured()
 
     def test_is_speedtest_configured_url_only(self, tmp_path):
         mgr = ConfigManager(str(tmp_path / "data"))
-        mgr.save({"modem_password": "test", "speedtest_tracker_url": "http://x"})
+        mgr.save({"modem_password": "test", "modem_type": "fritzbox", "speedtest_tracker_url": "http://x"})
         assert not mgr.is_speedtest_configured()
 
     def test_is_speedtest_configured_true(self, tmp_path):
         mgr = ConfigManager(str(tmp_path / "data"))
         mgr.save({
             "modem_password": "test",
+            "modem_type": "fritzbox",
             "speedtest_tracker_url": "http://x",
             "speedtest_tracker_token": "tok",
         })
@@ -169,6 +170,7 @@ class TestSpeedtestConfig:
         mgr = ConfigManager(str(tmp_path / "data"))
         mgr.save({
             "modem_password": "test",
+            "modem_type": "fritzbox",
             "speedtest_tracker_token": "my-secret-token",
         })
         # Raw value in file should not be the plaintext
@@ -195,6 +197,7 @@ def speedtest_client(tmp_path):
     mgr = ConfigManager(data_dir)
     mgr.save({
         "modem_password": "test",
+        "modem_type": "fritzbox",
         "speedtest_tracker_url": "http://speedtest.local:8999",
         "speedtest_tracker_token": "test-token",
     })
@@ -225,7 +228,7 @@ class TestSpeedtestAPI:
     def test_api_speedtest_not_configured(self, tmp_path):
         data_dir = str(tmp_path / "data2")
         mgr = ConfigManager(data_dir)
-        mgr.save({"modem_password": "test"})
+        mgr.save({"modem_password": "test", "modem_type": "fritzbox"})
         init_config(mgr)
         init_storage(None)
         _reset_speedtest_module_storage()

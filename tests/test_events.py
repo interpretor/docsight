@@ -358,7 +358,7 @@ def api_storage(tmp_path):
 def client(tmp_path, api_storage):
     data_dir = str(tmp_path / "data")
     mgr = ConfigManager(data_dir)
-    mgr.save({"modem_password": "test"})
+    mgr.save({"modem_password": "test", "modem_type": "fritzbox"})
     init_config(mgr)
     init_storage(api_storage)
     app.config["TESTING"] = True

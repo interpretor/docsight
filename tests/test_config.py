@@ -181,9 +181,17 @@ class TestConfigMigration:
 
 
 class TestConfigState:
-    def test_is_configured_with_password(self, config):
-        config.save({"modem_password": "pass123"})
+    def test_is_configured_with_modem_type(self, config):
+        config.save({"modem_type": "fritzbox"})
         assert config.is_configured() is True
+
+    def test_is_configured_without_password(self, config):
+        config.save({"modem_type": "generic"})
+        assert config.is_configured() is True
+
+    def test_not_configured_without_modem_type(self, config):
+        config.save({"modem_password": "pass123"})
+        assert config.is_configured() is False
 
     def test_is_mqtt_configured(self, config):
         config.save({"mqtt_host": "broker.local"})

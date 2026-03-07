@@ -46,6 +46,7 @@ def config_mgr(tmp_path):
     mgr = ConfigManager(data_dir)
     mgr.save({
         "modem_password": "test",
+        "modem_type": "fritzbox",
         "speedtest_tracker_url": "http://stt:8080",
         "speedtest_tracker_token": "testtoken",
     })
