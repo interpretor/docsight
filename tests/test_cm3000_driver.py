@@ -240,11 +240,18 @@ class TestLogin:
         mock_ok = MagicMock()
         mock_ok.raise_for_status = MagicMock()
 
+        # First call on old session raises ConnectionError.
+        # Driver creates a new session for retry, so we patch
+        # requests.Session to return a mock whose .get() succeeds.
+        mock_new_session = MagicMock()
+        mock_new_session.get.return_value = mock_ok
+
         with patch.object(
             driver._session, "get",
-            side_effect=[req.ConnectionError("reset"), mock_ok],
-        ):
+            side_effect=req.ConnectionError("reset"),
+        ), patch("app.drivers.cm3000.requests.Session", return_value=mock_new_session):
             driver.login()  # Should succeed on retry
+            mock_new_session.get.assert_called_once()
 
 
 # -- DOCSIS data: structure --
