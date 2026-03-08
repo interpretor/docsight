@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="/static/css/main.css">
     <link rel="stylesheet" href="/static/css/views.css">
     <link rel="stylesheet" href="/static/css/modals.css">
+    <link rel="stylesheet" href="/static/css/glossary.css">
     {% for mod in modules|sort(attribute='menu.order') if mod.has_css %}
     <link rel="stylesheet" href="/modules/{{ mod.id }}/static/style.css">
     {% endfor %}
@@ -389,7 +390,7 @@
         {# Card 1: DS Power #}
         <div class="metric-card glass">
             <div class="metric-header">
-                <span class="metric-label">{{ t.signal_ds_power }}</span>
+                <span class="metric-label">{{ t.signal_ds_power }} <span class="glossary-hint"><i data-lucide="info"></i><div class="glossary-popover">{{ t.glossary_power }}</div></span></span>
                 <div class="metric-icon purple"><i data-lucide="arrow-down"></i></div>
             </div>
             <div class="metric-value-row">
@@ -405,7 +406,7 @@
         {# Card 2: US Power #}
         <div class="metric-card glass">
             <div class="metric-header">
-                <span class="metric-label">{{ t.signal_us_power }}</span>
+                <span class="metric-label">{{ t.signal_us_power }} <span class="glossary-hint"><i data-lucide="info"></i><div class="glossary-popover">{{ t.glossary_power }}</div></span></span>
                 <div class="metric-icon blue"><i data-lucide="arrow-up"></i></div>
             </div>
             <div class="metric-value-row">
@@ -421,7 +422,7 @@
         {# Card 3: SNR #}
         <div class="metric-card glass">
             <div class="metric-header">
-                <span class="metric-label">SNR</span>
+                <span class="metric-label">SNR <span class="glossary-hint"><i data-lucide="info"></i><div class="glossary-popover">{{ t.glossary_snr }}</div></span></span>
                 <div class="metric-icon green"><i data-lucide="signal"></i></div>
             </div>
             <div class="metric-value-row">
@@ -437,7 +438,7 @@
         {# Card 4: Errors #}
         <div class="metric-card glass">
             <div class="metric-header">
-                <span class="metric-label">{{ t.card_errors }}</span>
+                <span class="metric-label">{{ t.card_errors }} <span class="glossary-hint"><i data-lucide="info"></i><div class="glossary-popover">{{ t.glossary_correctable }} {{ t.glossary_uncorrectable }}</div></span></span>
                 <div class="metric-icon amber"><i data-lucide="alert-triangle"></i></div>
             </div>
             <div class="metric-value-row">
@@ -579,7 +580,7 @@
         <div class="docsis-group">
             <div class="docsis-group-header" onclick="this.parentElement.classList.toggle('open')">
                 <i data-lucide="chevron-right"></i>
-                DOCSIS {{ group.grouper }} {{ 'OFDM' if group.grouper == '3.1' else 'SC-QAM' }} · {{ group.list|length }} {{ t.channel if group.list|length == 1 else t.channels }}
+                DOCSIS {{ group.grouper }} {{ 'OFDM' if group.grouper == '3.1' else 'SC-QAM' }} <span class="glossary-hint"><i data-lucide="info"></i><div class="glossary-popover">{{ t.glossary_ofdm if group.grouper == '3.1' else t.glossary_scqam }}</div></span> · {{ group.list|length }} {{ t.channel if group.list|length == 1 else t.channels }}
             </div>
             <div class="table-scroll-wrapper">
                 <div class="table-scroll">
@@ -637,7 +638,7 @@
         <div class="docsis-group">
             <div class="docsis-group-header" onclick="this.parentElement.classList.toggle('open')">
                 <i data-lucide="chevron-right"></i>
-                DOCSIS {{ group.grouper }} {{ 'OFDMA' if group.grouper == '3.1' else 'SC-QAM' }} · {{ group.list|length }} {{ t.channel if group.list|length == 1 else t.channels }}
+                DOCSIS {{ group.grouper }} {{ 'OFDMA' if group.grouper == '3.1' else 'SC-QAM' }} <span class="glossary-hint"><i data-lucide="info"></i><div class="glossary-popover">{{ t.glossary_ofdm if group.grouper == '3.1' else t.glossary_scqam }}</div></span> · {{ group.list|length }} {{ t.channel if group.list|length == 1 else t.channels }}
             </div>
             <div class="table-scroll-wrapper">
                 <div class="table-scroll">
@@ -2483,6 +2484,7 @@ var T = {{ t|tojson }};
 <script src="/static/js/utils.js"></script>
 <script src="/static/js/speedtest.js"></script>
 <script src="/static/js/correlation.js"></script>
+<script src="/static/js/glossary.js"></script>
 
 <script>
   // Apply deferred hash-based view routing (all external scripts are now loaded)

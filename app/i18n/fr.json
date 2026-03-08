@@ -647,5 +647,14 @@
   "connection_failed": "Échec de la connexion",
   "theme_toggle": "Thème",
   "invalid_backup": "Fichier de sauvegarde invalide",
-  "restore_failed": "Échec de la restauration"
+  "restore_failed": "Échec de la restauration",
+  "glossary_snr": "Rapport signal/bruit : mesure la clarté du signal en décibels. Un SNR élevé signifie une réception propre. Un SNR faible cause des pertes de paquets.",
+  "glossary_power": "Puissance du signal mesurée en dBmV. Trop élevée ou trop faible, elle dégrade la connexion. La plage idéale dépend du fournisseur.",
+  "glossary_correctable": "Paquets de données endommagés mais réparés automatiquement. De nombreuses erreurs corrigibles sont un signal d'alerte pour des problèmes de câble.",
+  "glossary_uncorrectable": "Paquets de données perdus et non récupérables. Ils causent des saccades, des coupures et des vitesses réduites.",
+  "glossary_scqam": "SC-QAM (Single-Carrier QAM) : technologie DOCSIS 3.0 traditionnelle utilisant des canaux étroits de 6-8 MHz pour des flux de données individuels.",
+  "glossary_ofdm": "OFDM/OFDMA : technologie DOCSIS 3.1 avec des canaux larges et des milliers de sous-porteuses. Permet des vitesses plus élevées mais plus sensible aux interférences.",
+  "glossary_modulation": "Modulation (niveau QAM) : des niveaux élevés comme 256QAM ou 4096QAM transportent plus de données par signal. Une modulation basse indique une dégradation du signal.",
+  "glossary_docsis": "DOCSIS 3.0 utilise des canaux SC-QAM. DOCSIS 3.1 ajoute OFDM/OFDMA pour des vitesses supérieures. La plupart des modems utilisent les deux simultanément (mode mixte).",
+  "glossary_gaming_index": "Indice de qualité gaming : évalue la connexion pour le jeu en temps réel selon la latence, le jitter et la perte de paquets. A/B = excellent, C = jouable, D/F = problématique."
 }

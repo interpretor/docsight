@@ -21,5 +21,8 @@
     "click_day_hint": "Klicken Sie auf einen Tagesbalken für Kanaldetails",
     "no_degradation": "Keine Degradation beobachtet",
     "channel_summary": "Kanalzusammenfassung",
-    "protocol_group_label": "Protokollgruppe"
+    "protocol_group_label": "Protokollgruppe",
+    "glossary_health_index": "Gesundheitsindex: ein Gesamtwert (0-100), der die Modulationsqualität aller Kanäle widerspiegelt. Höher bedeutet weniger Signaldegradation.",
+    "glossary_low_qam": "Low-QAM-Anteil: Anteil der Zeit, in der Kanäle auf niedrige Modulationsstufen (QPSK, 16QAM) fallen. Hoher Anteil deutet auf anhaltende Signalprobleme hin.",
+    "glossary_sample_density": "Messabdeckung: Anzahl der gesammelten Polling-Messungen im gewählten Zeitraum. Mehr Messungen bedeuten genauere Statistiken."
 }

@@ -655,5 +655,14 @@
   "connection_failed": "Connection failed",
   "theme_toggle": "Theme",
   "invalid_backup": "Invalid backup file",
-  "restore_failed": "Restore failed"
+  "restore_failed": "Restore failed",
+  "glossary_snr": "Signal-to-Noise Ratio: measures signal clarity in decibels. Higher is better. Low SNR causes packet loss and slow speeds.",
+  "glossary_power": "Signal strength measured in dBmV. Too high or too low degrades your connection. The ideal range depends on your ISP.",
+  "glossary_correctable": "Data packets that arrived damaged but were automatically repaired. Many correctable errors are a warning sign for cable issues.",
+  "glossary_uncorrectable": "Data packets that were lost and could not be recovered. These cause buffering, dropouts, and slow speeds.",
+  "glossary_scqam": "SC-QAM (Single-Carrier QAM): traditional DOCSIS 3.0 technology using narrow 6-8 MHz channels for individual data streams.",
+  "glossary_ofdm": "OFDM/OFDMA: DOCSIS 3.1 technology using wide channels with thousands of subcarriers. Enables higher speeds but is more sensitive to interference.",
+  "glossary_modulation": "Modulation (QAM level): higher levels like 256QAM or 4096QAM carry more data per signal. Lower modulation indicates signal degradation.",
+  "glossary_docsis": "DOCSIS 3.0 uses SC-QAM channels. DOCSIS 3.1 adds OFDM/OFDMA for higher speeds. Most modems use both simultaneously (mixed mode).",
+  "glossary_gaming_index": "Gaming Quality Index: rates your connection for real-time gaming based on latency, jitter, and packet loss. A/B = great, C = playable, D/F = problematic."
 }
