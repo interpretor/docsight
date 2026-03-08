@@ -51,10 +51,13 @@ _LOGIN_LOCKOUT_BASE = 30  # seconds, doubles each excess attempt
 
 
 def _get_client_ip():
-    """Get client IP, respecting X-Forwarded-For behind reverse proxy."""
-    forwarded = request.headers.get("X-Forwarded-For", "")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+    """Get client IP from request.remote_addr.
+
+    When REVERSE_PROXY is configured, Werkzeug's ProxyFix middleware
+    rewrites remote_addr from trusted X-Forwarded-For headers before
+    the request reaches Flask.  Without ProxyFix the raw TCP peer
+    address is used, which prevents X-Forwarded-For spoofing.
+    """
     return request.remote_addr or "unknown"
 
 

@@ -247,11 +247,28 @@ def merge_module_i18n(module_id: str, i18n_dir: str) -> None:
         log.debug("Merged %d i18n keys for module '%s' lang '%s'", len(data), module_id, lang)
 
 
-def load_module_routes(app, module_id: str, module_path: str, routes_file: str) -> None:
+# Core routes that community modules must not shadow.  These are exact
+# paths (or prefixes ending with /) that protect authentication, config,
+# and core data endpoints from being intercepted by untrusted code.
+_PROTECTED_ROUTES = {
+    "/", "/login", "/logout", "/setup", "/settings", "/health", "/sw.js",
+}
+_PROTECTED_API_PREFIXES = (
+    "/api/config", "/api/data", "/api/tokens",
+    "/api/poll", "/api/status", "/api/history", "/api/events", "/api/trends",
+    "/api/export", "/api/correlation",
+    "/api/modules/", "/api/themes/",
+)
+
+
+def load_module_routes(app, module_id: str, module_path: str, routes_file: str, *, builtin: bool = False) -> None:
     """Dynamically load a Flask Blueprint from a module's routes file.
 
     The routes file must export a variable named 'bp' or 'blueprint'
     that is a Flask Blueprint instance.
+
+    Community modules (builtin=False) are checked for route conflicts
+    with core endpoints before registration.
     """
     routes_path = os.path.join(module_path, routes_file)
     if not os.path.isfile(routes_path):
@@ -279,11 +296,40 @@ def load_module_routes(app, module_id: str, module_path: str, routes_file: str) 
         log.warning("Module '%s': routes.py does not export 'bp' or 'blueprint'", module_id)
         return
 
-    try:
-        app.register_blueprint(blueprint)
-        log.info("Module '%s': registered routes blueprint", module_id)
-    except Exception as e:
-        log.error("Module '%s': failed to register blueprint: %s", module_id, e)
+    # Community module route validation: block blueprints that shadow
+    # core routes (prevents login interception, config hijacking, etc.).
+    if not builtin:
+        rules_before = set(r.rule for r in app.url_map.iter_rules())
+        try:
+            app.register_blueprint(blueprint)
+        except Exception as e:
+            log.error("Module '%s': failed to register blueprint: %s", module_id, e)
+            return
+        rules_after = set(r.rule for r in app.url_map.iter_rules())
+        new_rules = rules_after - rules_before
+        blocked = []
+        for rule in new_rules:
+            if rule in _PROTECTED_ROUTES:
+                blocked.append(rule)
+                continue
+            for prefix in _PROTECTED_API_PREFIXES:
+                if rule.startswith(prefix):
+                    blocked.append(rule)
+                    break
+        if blocked:
+            log.error(
+                "Module '%s': BLOCKED -- routes conflict with core endpoints: %s. "
+                "Community modules must not shadow protected routes.",
+                module_id, ", ".join(sorted(blocked)),
+            )
+            return
+        log.info("Module '%s': registered community routes blueprint (%d routes)", module_id, len(new_rules))
+    else:
+        try:
+            app.register_blueprint(blueprint)
+            log.info("Module '%s': registered routes blueprint", module_id)
+        except Exception as e:
+            log.error("Module '%s': failed to register blueprint: %s", module_id, e)
 
 
 def load_module_collector(module_id: str, module_path: str, spec: str):
@@ -596,7 +642,7 @@ class ModuleLoader:
 
         # Routes (Blueprint)
         if "routes" in c:
-            load_module_routes(self._app, mod.id, mod.path, c["routes"])
+            load_module_routes(self._app, mod.id, mod.path, c["routes"], builtin=mod.builtin)
 
         # Static files
         if "static" in c:

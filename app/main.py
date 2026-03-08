@@ -252,6 +252,23 @@ def main():
     web.init_modules(module_loader)
     web.setup_module_templates(module_loader)
 
+    # Reverse proxy support: REVERSE_PROXY=1 (or number of proxy hops)
+    # rewrites request.remote_addr from X-Forwarded-For so rate limiting
+    # and audit logs see the real client IP, not the proxy IP.
+    reverse_proxy = os.environ.get("REVERSE_PROXY", "").strip()
+    if reverse_proxy:
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        num_proxies = int(reverse_proxy) if reverse_proxy.isdigit() else 1
+        web.app.wsgi_app = ProxyFix(
+            web.app.wsgi_app,
+            x_for=num_proxies,
+            x_proto=num_proxies,
+            x_host=0,
+            x_prefix=0,
+        )
+        web.app.config["SESSION_COOKIE_SECURE"] = True
+        log.info("Reverse proxy mode: trusting %d hop(s), secure cookies enabled", num_proxies)
+
     # Start Flask
     web_port = config_mgr.get("web_port", 8765)
     web_thread = threading.Thread(target=run_web, args=(web_port,), daemon=True)

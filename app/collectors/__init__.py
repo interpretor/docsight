@@ -9,8 +9,44 @@ import logging
 from .base import Collector, CollectorResult
 from .modem import ModemCollector
 from .demo import DemoCollector
+from ..config import SECRET_KEYS, HASH_KEYS
 
 log = logging.getLogger("docsis.collectors")
+
+
+class _ModuleConfigProxy:
+    """Read-only config proxy that hides secrets from community modules.
+
+    Builtin modules receive the real ConfigManager.  Community modules
+    get this proxy which blocks access to modem_password, admin_password,
+    mqtt_password, and other secret/hash keys unless they are specifically
+    declared in the module's own config defaults.
+    """
+
+    def __init__(self, config_mgr, allowed_secret_keys=frozenset()):
+        self._cfg = config_mgr
+        self._blocked = (SECRET_KEYS | HASH_KEYS) - set(allowed_secret_keys)
+
+    def get(self, key, default=None):
+        if key in self._blocked:
+            return default
+        return self._cfg.get(key, default)
+
+    def get_all(self, mask_secrets=False):
+        result = self._cfg.get_all(mask_secrets=True)
+        for key in self._blocked:
+            result.pop(key, None)
+        return result
+
+    def is_configured(self):
+        return self._cfg.is_configured()
+
+    def is_demo_mode(self):
+        return self._cfg.is_demo_mode()
+
+    @property
+    def data_dir(self):
+        return self._cfg.data_dir
 
 # Registry maps collector name -> class
 COLLECTOR_REGISTRY = {
@@ -79,8 +115,17 @@ def discover_collectors(config_mgr, storage, event_detector, mqtt_pub, web, anal
         for mod in module_loader.get_enabled_modules():
             if mod.collector_class:
                 try:
+                    # Community modules get a restricted config proxy that
+                    # hides secrets not declared in their own config defaults.
+                    if mod.builtin:
+                        mod_cfg = config_mgr
+                    else:
+                        mod_cfg = _ModuleConfigProxy(
+                            config_mgr,
+                            allowed_secret_keys=set(mod.config.keys()) & SECRET_KEYS,
+                        )
                     c = mod.collector_class(
-                        config_mgr=config_mgr,
+                        config_mgr=mod_cfg,
                         storage=storage,
                         web=web,
                     )
