@@ -25,7 +25,6 @@ from .base import ModemDriver
 
 log = logging.getLogger("docsis.driver.surfboard")
 
-_HNAP_URI = "http://purenetworks.com/HNAP1/"
 _HNAP_LOGIN_URI = '"http://purenetworks.com/HNAP1/Login"'
 _HNAP_MULTI_URI = '"http://purenetworks.com/HNAP1/GetMultipleHNAPs"'
 
@@ -151,15 +150,9 @@ class SurfboardDriver(ModemDriver):
             raise RuntimeError(f"SURFboard login failed: {result}")
 
     def get_docsis_data(self) -> dict:
-        """Retrieve DOCSIS channel data via HNAP GetMultipleHNAPs.
-
-        Requests both GetMoto* and GetCustomer* action names so that
-        modems using either HNAP variant respond with channel data.
-        """
+        """Retrieve DOCSIS channel data via HNAP GetMultipleHNAPs."""
         body = {
             "GetMultipleHNAPs": {
-                "GetMotoStatusDownstreamChannelInfo": "",
-                "GetMotoStatusUpstreamChannelInfo": "",
                 "GetCustomerStatusDownstreamChannelInfo": "",
                 "GetCustomerStatusUpstreamChannelInfo": "",
             }
@@ -168,15 +161,11 @@ class SurfboardDriver(ModemDriver):
         multi = resp.get("GetMultipleHNAPsResponse", {})
 
         ds_raw = (
-            multi.get("GetMotoStatusDownstreamChannelInfoResponse", {})
-            .get("MotoConnDownstreamChannel", "")
-            or multi.get("GetCustomerStatusDownstreamChannelInfoResponse", {})
+            multi.get("GetCustomerStatusDownstreamChannelInfoResponse", {})
             .get("CustomerConnDownstreamChannel", "")
         )
         us_raw = (
-            multi.get("GetMotoStatusUpstreamChannelInfoResponse", {})
-            .get("MotoConnUpstreamChannel", "")
-            or multi.get("GetCustomerStatusUpstreamChannelInfoResponse", {})
+            multi.get("GetCustomerStatusUpstreamChannelInfoResponse", {})
             .get("CustomerConnUpstreamChannel", "")
         )
 
@@ -189,38 +178,22 @@ class SurfboardDriver(ModemDriver):
         }
 
     def get_device_info(self) -> dict:
-        """Retrieve device model and firmware from HNAP.
-
-        Requests both GetMoto* and GetCustomer* action names to support
-        both HNAP variants.
-        """
+        """Retrieve device model and firmware from HNAP."""
         try:
             body = {
                 "GetMultipleHNAPs": {
-                    "GetMotoStatusSoftware": "",
-                    "GetMotoStatusStartupSequence": "",
                     "GetCustomerStatusConnectionInfo": "",
                 }
             }
             resp = self._hnap_post("GetMultipleHNAPs", body)
             multi = resp.get("GetMultipleHNAPsResponse", {})
 
-            sw = multi.get("GetMotoStatusSoftwareResponse", {})
             cust = multi.get("GetCustomerStatusConnectionInfoResponse", {})
-
-            model = ""
-            hw_ver = sw.get("StatusSoftwareHdVer", "")
-            if hw_ver:
-                model = hw_ver.split("-")[0].strip() if "-" in hw_ver else hw_ver
-            elif cust.get("StatusSoftwareModelName"):
-                model = cust["StatusSoftwareModelName"]
-
-            sw_ver = sw.get("StatusSoftwareSfVer", "") or cust.get("StatusSoftwareSfVer", "")
 
             return {
                 "manufacturer": "Arris",
-                "model": model,
-                "sw_version": sw_ver,
+                "model": cust.get("StatusSoftwareModelName", ""),
+                "sw_version": cust.get("StatusSoftwareSfVer", ""),
             }
         except Exception:
             return {"manufacturer": "Arris", "model": "", "sw_version": ""}

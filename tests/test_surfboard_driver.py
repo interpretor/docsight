@@ -56,27 +56,23 @@ US_RAW = (
 
 HNAP_DS_RESPONSE = {
     "GetMultipleHNAPsResponse": {
-        "GetMotoStatusDownstreamChannelInfoResponse": {
-            "MotoConnDownstreamChannel": DS_RAW,
-            "GetMotoStatusDownstreamChannelInfoResult": "OK",
+        "GetCustomerStatusDownstreamChannelInfoResponse": {
+            "CustomerConnDownstreamChannel": DS_RAW,
+            "GetCustomerStatusDownstreamChannelInfoResult": "OK",
         },
-        "GetMotoStatusUpstreamChannelInfoResponse": {
-            "MotoConnUpstreamChannel": US_RAW,
-            "GetMotoStatusUpstreamChannelInfoResult": "OK",
+        "GetCustomerStatusUpstreamChannelInfoResponse": {
+            "CustomerConnUpstreamChannel": US_RAW,
+            "GetCustomerStatusUpstreamChannelInfoResult": "OK",
         },
     }
 }
 
 HNAP_DEVICE_RESPONSE = {
     "GetMultipleHNAPsResponse": {
-        "GetMotoStatusSoftwareResponse": {
-            "StatusSoftwareHdVer": "S34-1U4",
+        "GetCustomerStatusConnectionInfoResponse": {
+            "StatusSoftwareModelName": "S34",
             "StatusSoftwareSfVer": "2.5.0.1-2-GA",
-            "StatusSoftwareSpecVer": "DOCSIS 3.1",
-            "GetMotoStatusSoftwareResult": "OK",
-        },
-        "GetMotoStatusStartupSequenceResponse": {
-            "GetMotoStatusStartupSequenceResult": "OK",
+            "GetCustomerStatusConnectionInfoResult": "OK",
         },
     }
 }
@@ -104,13 +100,13 @@ def driver():
 
 @pytest.fixture
 def mock_hnap(driver):
-    """Patch _hnap_post to return Moto-variant channel data."""
+    """Patch _hnap_post to return channel data."""
     def side_effect(action, body, auth=True):
         if action == "GetMultipleHNAPs":
             keys = body.get("GetMultipleHNAPs", {})
-            if "GetMotoStatusDownstreamChannelInfo" in keys or "GetCustomerStatusDownstreamChannelInfo" in keys:
+            if "GetCustomerStatusDownstreamChannelInfo" in keys:
                 return HNAP_DS_RESPONSE
-            if "GetMotoStatusSoftware" in keys or "GetCustomerStatusConnectionInfo" in keys:
+            if "GetCustomerStatusConnectionInfo" in keys:
                 return HNAP_DEVICE_RESPONSE
         return {}
 
@@ -462,7 +458,7 @@ class TestUpstreamOFDMA:
 # -- Device info --
 
 class TestDeviceInfo:
-    def test_model_from_hw_version(self, mock_hnap):
+    def test_model_name(self, mock_hnap):
         info = mock_hnap.get_device_info()
         assert info["manufacturer"] == "Arris"
         assert info["model"] == "S34"
@@ -508,8 +504,8 @@ class TestEdgeCases:
     def test_empty_downstream(self, driver):
         with patch.object(driver, "_hnap_post", return_value={
             "GetMultipleHNAPsResponse": {
-                "GetMotoStatusDownstreamChannelInfoResponse": {"MotoConnDownstreamChannel": ""},
-                "GetMotoStatusUpstreamChannelInfoResponse": {"MotoConnUpstreamChannel": ""},
+                "GetCustomerStatusDownstreamChannelInfoResponse": {"CustomerConnDownstreamChannel": ""},
+                "GetCustomerStatusUpstreamChannelInfoResponse": {"CustomerConnUpstreamChannel": ""},
             }
         }):
             data = driver.get_docsis_data()
@@ -522,8 +518,8 @@ class TestEdgeCases:
         raw = "1^Not Locked^256QAM^99^705000000^0.0^40.9^0^0^"
         with patch.object(driver, "_hnap_post", return_value={
             "GetMultipleHNAPsResponse": {
-                "GetMotoStatusDownstreamChannelInfoResponse": {"MotoConnDownstreamChannel": raw},
-                "GetMotoStatusUpstreamChannelInfoResponse": {"MotoConnUpstreamChannel": ""},
+                "GetCustomerStatusDownstreamChannelInfoResponse": {"CustomerConnDownstreamChannel": raw},
+                "GetCustomerStatusUpstreamChannelInfoResponse": {"CustomerConnUpstreamChannel": ""},
             }
         }):
             data = driver.get_docsis_data()
@@ -533,8 +529,8 @@ class TestEdgeCases:
         raw = "1^Locked^256QAM^43^"  # Too few fields
         with patch.object(driver, "_hnap_post", return_value={
             "GetMultipleHNAPsResponse": {
-                "GetMotoStatusDownstreamChannelInfoResponse": {"MotoConnDownstreamChannel": raw},
-                "GetMotoStatusUpstreamChannelInfoResponse": {"MotoConnUpstreamChannel": ""},
+                "GetCustomerStatusDownstreamChannelInfoResponse": {"CustomerConnDownstreamChannel": raw},
+                "GetCustomerStatusUpstreamChannelInfoResponse": {"CustomerConnUpstreamChannel": ""},
             }
         }):
             data = driver.get_docsis_data()
@@ -581,87 +577,3 @@ class TestAnalyzerIntegration:
             assert ch["docsis_version"] == "3.1"
 
 
-# -- Customer* HNAP variant (e.g. some S34 firmware) --
-
-CUSTOMER_DS_RESPONSE = {
-    "GetMultipleHNAPsResponse": {
-        "GetCustomerStatusDownstreamChannelInfoResponse": {
-            "CustomerConnDownstreamChannel": DS_RAW,
-            "GetCustomerStatusDownstreamChannelInfoResult": "OK",
-        },
-        "GetCustomerStatusUpstreamChannelInfoResponse": {
-            "CustomerConnUpstreamChannel": US_RAW,
-            "GetCustomerStatusUpstreamChannelInfoResult": "OK",
-        },
-    }
-}
-
-CUSTOMER_DEVICE_RESPONSE = {
-    "GetMultipleHNAPsResponse": {
-        "GetCustomerStatusConnectionInfoResponse": {
-            "StatusSoftwareModelName": "S34",
-            "StatusSoftwareSfVer": "2.5.0.1-2-GA",
-            "GetCustomerStatusConnectionInfoResult": "OK",
-        },
-    }
-}
-
-
-@pytest.fixture
-def mock_hnap_customer(driver):
-    """Patch _hnap_post to return Customer-variant responses only."""
-    def side_effect(action, body, auth=True):
-        if action == "GetMultipleHNAPs":
-            keys = body.get("GetMultipleHNAPs", {})
-            if "GetCustomerStatusDownstreamChannelInfo" in keys:
-                return CUSTOMER_DS_RESPONSE
-            if "GetCustomerStatusConnectionInfo" in keys:
-                return CUSTOMER_DEVICE_RESPONSE
-        return {}
-
-    with patch.object(driver, "_hnap_post", side_effect=side_effect):
-        yield driver
-
-
-class TestCustomerVariant:
-    """Verify that modems using GetCustomer* HNAP actions work identically."""
-
-    def test_downstream_channel_count(self, mock_hnap_customer):
-        data = mock_hnap_customer.get_docsis_data()
-        assert len(data["channelDs"]["docsis30"]) == 32
-        assert len(data["channelDs"]["docsis31"]) == 1
-
-    def test_upstream_channel_count(self, mock_hnap_customer):
-        data = mock_hnap_customer.get_docsis_data()
-        assert len(data["channelUs"]["docsis30"]) == 4
-        assert len(data["channelUs"]["docsis31"]) == 1
-
-    def test_first_ds_channel_fields(self, mock_hnap_customer):
-        data = mock_hnap_customer.get_docsis_data()
-        ch = data["channelDs"]["docsis30"][0]
-        assert ch["channelID"] == 43
-        assert ch["frequency"] == "705 MHz"
-        assert ch["powerLevel"] == 0.0
-        assert ch["mer"] == 40.9
-
-    def test_first_us_channel_fields(self, mock_hnap_customer):
-        data = mock_hnap_customer.get_docsis_data()
-        ch = data["channelUs"]["docsis30"][0]
-        assert ch["channelID"] == 3
-        assert ch["frequency"] == "29.2 MHz"
-        assert ch["powerLevel"] == 46.5
-
-    def test_device_info_model(self, mock_hnap_customer):
-        info = mock_hnap_customer.get_device_info()
-        assert info["model"] == "S34"
-
-    def test_device_info_sw_version(self, mock_hnap_customer):
-        info = mock_hnap_customer.get_device_info()
-        assert info["sw_version"] == "2.5.0.1-2-GA"
-
-    def test_moto_variant_still_works(self, mock_hnap):
-        """Existing Moto* responses remain functional."""
-        data = mock_hnap.get_docsis_data()
-        assert len(data["channelDs"]["docsis30"]) == 32
-        info = mock_hnap.get_device_info()
-        assert info["model"] == "S34"
