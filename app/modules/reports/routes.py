@@ -122,5 +122,6 @@ def api_complaint():
         snapshots, config, None, lang,
         customer_name, customer_number, customer_address,
         bnetz_data=bnetz_data,
+        current_analysis=analysis,
     )
     return jsonify({"text": text, "lang": lang})

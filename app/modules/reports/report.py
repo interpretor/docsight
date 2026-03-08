@@ -90,6 +90,144 @@ def _default_warn_thresholds():
         "snr": f">= {snr.get('warning_min', 31.0)} dB",
     }
 
+
+def _build_diagnostic_notes(current_analysis):
+    """Check channels for out-of-spec values and return diagnostic notes.
+
+    Each note is a dict with keys: type, channel_id, metric, value, spec_max,
+    spec_min, deviation_pct, severity.
+    """
+    if not current_analysis:
+        return []
+
+    notes = []
+    t = get_thresholds()
+    us_thresholds = t.get("upstream_power", {})
+    ds_thresholds = t.get("downstream_power", {})
+    snr_thresholds = t.get("snr", {})
+
+    _MOD_ALIASES = {"OFDM": "4096QAM", "OFDMA": "4096QAM"}
+
+    for ch in current_analysis.get("us_channels", []):
+        power = ch.get("power")
+        if power is None:
+            continue
+        mod = (ch.get("modulation") or "").upper()
+        if mod in ("OFDMA",):
+            key = "ofdma"
+        else:
+            key = "sc_qam"
+        spec = us_thresholds.get(key, {})
+        crit = spec.get("critical", [35.0, 53.0])
+        if power > crit[1]:
+            deviation = round((power - crit[1]) / crit[1] * 100)
+            notes.append({
+                "type": "us_power_high",
+                "channel_id": ch.get("channel_id", "?"),
+                "channel_type": mod or key.upper(),
+                "metric": "upstream power",
+                "value": power,
+                "spec_max": crit[1],
+                "deviation_pct": deviation,
+                "severity": "extreme" if deviation > 50 else "critical",
+            })
+        elif power < crit[0]:
+            deviation = round((crit[0] - power) / crit[0] * 100)
+            notes.append({
+                "type": "us_power_low",
+                "channel_id": ch.get("channel_id", "?"),
+                "channel_type": mod or key.upper(),
+                "metric": "upstream power",
+                "value": power,
+                "spec_min": crit[0],
+                "deviation_pct": deviation,
+                "severity": "extreme" if deviation > 50 else "critical",
+            })
+
+    for ch in current_analysis.get("ds_channels", []):
+        power = ch.get("power")
+        mod = (ch.get("modulation") or "256QAM").upper()
+        lookup = _MOD_ALIASES.get(mod, mod)
+        spec = ds_thresholds.get(lookup, ds_thresholds.get("256QAM", {}))
+        crit = spec.get("critical", [-8.0, 20.0])
+        if power is not None:
+            if power > crit[1]:
+                deviation = round((power - crit[1]) / max(abs(crit[1]), 1) * 100)
+                notes.append({
+                    "type": "ds_power_high",
+                    "channel_id": ch.get("channel_id", "?"),
+                    "channel_type": mod,
+                    "metric": "downstream power",
+                    "value": power,
+                    "spec_max": crit[1],
+                    "deviation_pct": deviation,
+                    "severity": "extreme" if deviation > 50 else "critical",
+                })
+            elif power < crit[0]:
+                deviation = round((crit[0] - power) / max(abs(crit[0]), 1) * 100)
+                notes.append({
+                    "type": "ds_power_low",
+                    "channel_id": ch.get("channel_id", "?"),
+                    "channel_type": mod,
+                    "metric": "downstream power",
+                    "value": power,
+                    "spec_min": crit[0],
+                    "deviation_pct": deviation,
+                    "severity": "extreme" if deviation > 50 else "critical",
+                })
+
+        snr = ch.get("snr")
+        if snr is not None:
+            snr_spec = snr_thresholds.get(lookup, snr_thresholds.get("256QAM", {}))
+            snr_crit = snr_spec.get("critical_min", 29.0)
+            if snr < snr_crit:
+                deviation = round((snr_crit - snr) / max(snr_crit, 1) * 100)
+                notes.append({
+                    "type": "snr_low",
+                    "channel_id": ch.get("channel_id", "?"),
+                    "channel_type": mod,
+                    "metric": "SNR/MER",
+                    "value": snr,
+                    "spec_min": snr_crit,
+                    "deviation_pct": deviation,
+                    "severity": "extreme" if deviation > 30 else "critical",
+                })
+
+    return notes
+
+
+def _format_diagnostic_complaint(notes, s):
+    """Format diagnostic notes as complaint letter text section."""
+    if not notes:
+        return ""
+    lines = [s.get("complaint_diag_header", "Diagnostic analysis:")]
+    for note in notes:
+        if "spec_max" in note:
+            if note["type"] == "snr_low":
+                tmpl = s.get("diag_note_snr_low", "Channel {ch} ({ch_type}): {metric} of {value} dB below spec ({spec} dB) by {pct}%.")
+            else:
+                tmpl = s.get("diag_note_high", "Channel {ch} ({ch_type}): {metric} of {value} dBmV exceeds spec ({spec} dBmV) by {pct}%.")
+            lines.append("- " + tmpl.format(
+                ch=note["channel_id"], ch_type=note["channel_type"],
+                metric=note["metric"], value=note["value"],
+                spec=note["spec_max"], pct=note["deviation_pct"],
+            ))
+        elif "spec_min" in note:
+            if note["type"] == "snr_low":
+                tmpl = s.get("diag_note_snr_low", "Channel {ch} ({ch_type}): {metric} of {value} dB below spec ({spec} dB) by {pct}%.")
+            else:
+                tmpl = s.get("diag_note_low", "Channel {ch} ({ch_type}): {metric} of {value} dBmV below spec ({spec} dBmV) by {pct}%.")
+            lines.append("- " + tmpl.format(
+                ch=note["channel_id"], ch_type=note["channel_type"],
+                metric=note["metric"], value=note["value"],
+                spec=note["spec_min"], pct=note["deviation_pct"],
+            ))
+    if any(n.get("severity") == "extreme" for n in notes):
+        lines.append("")
+        lines.append(s.get("diag_note_isp_hint", ""))
+    return "\n".join(lines) + "\n\n"
+
+
 # ---------------------------------------------------------------------------
 # Localised strings for PDF reports
 # ---------------------------------------------------------------------------
@@ -181,6 +319,13 @@ REPORT_STRINGS = {
             "Please see the attached monitoring data for details."
         ),
         "complaint_short_closing": "Sincerely,\n[Your Name]",
+        # Diagnostic notes
+        "section_diagnostic_notes": "Diagnostic Notes",
+        "diag_note_high": "Channel {ch} ({ch_type}): {metric} of {value} dBmV exceeds DOCSIS specification maximum ({spec} dBmV) by {pct}%.",
+        "diag_note_low": "Channel {ch} ({ch_type}): {metric} of {value} dBmV is below DOCSIS specification minimum ({spec} dBmV) by {pct}%.",
+        "diag_note_snr_low": "Channel {ch} ({ch_type}): {metric} of {value} dB is below DOCSIS specification minimum ({spec} dB) by {pct}%.",
+        "diag_note_isp_hint": "Values this far outside specification typically indicate an ISP-side configuration or infrastructure issue, not a customer equipment problem.",
+        "complaint_diag_header": "Diagnostic analysis:",
         # Incident-scoped report
         "incident_report_title": "DOCSight Complaint Report",
         "section_incident_summary": "Incident Summary",
@@ -316,6 +461,13 @@ REPORT_STRINGS = {
             "Bitte entnehmen Sie die Details den beigefügten Überwachungsdaten."
         ),
         "complaint_short_closing": "Mit freundlichen Grüßen\n[Ihr Name]",
+        # Diagnostic notes
+        "section_diagnostic_notes": "Diagnostische Hinweise",
+        "diag_note_high": "Kanal {ch} ({ch_type}): {metric} von {value} dBmV überschreitet das DOCSIS-Spezifikationsmaximum ({spec} dBmV) um {pct}%.",
+        "diag_note_low": "Kanal {ch} ({ch_type}): {metric} von {value} dBmV unterschreitet das DOCSIS-Spezifikationsminimum ({spec} dBmV) um {pct}%.",
+        "diag_note_snr_low": "Kanal {ch} ({ch_type}): {metric} von {value} dB unterschreitet das DOCSIS-Spezifikationsminimum ({spec} dB) um {pct}%.",
+        "diag_note_isp_hint": "Werte, die so weit außerhalb der Spezifikation liegen, deuten typischerweise auf ein anbieterseitiges Konfigurations- oder Infrastrukturproblem hin, nicht auf ein Problem der Kundengeräte.",
+        "complaint_diag_header": "Diagnostische Analyse:",
         # Incident-scoped report
         "incident_report_title": "DOCSight Beschwerdebericht",
         "section_incident_summary": "Zusammenfassung",
@@ -451,6 +603,13 @@ REPORT_STRINGS = {
             "Veuillez consulter les données de surveillance jointes pour plus de détails."
         ),
         "complaint_short_closing": "Veuillez agréer mes salutations distinguées,\n[Votre nom]",
+        # Diagnostic notes
+        "section_diagnostic_notes": "Notes de diagnostic",
+        "diag_note_high": "Canal {ch} ({ch_type}) : {metric} de {value} dBmV dépasse le maximum de la spécification DOCSIS ({spec} dBmV) de {pct}%.",
+        "diag_note_low": "Canal {ch} ({ch_type}) : {metric} de {value} dBmV est inférieur au minimum de la spécification DOCSIS ({spec} dBmV) de {pct}%.",
+        "diag_note_snr_low": "Canal {ch} ({ch_type}) : {metric} de {value} dB est inférieur au minimum de la spécification DOCSIS ({spec} dB) de {pct}%.",
+        "diag_note_isp_hint": "Des valeurs aussi éloignées de la spécification indiquent généralement un problème de configuration ou d'infrastructure côté FAI, et non un problème d'équipement client.",
+        "complaint_diag_header": "Analyse diagnostique :",
         # Incident-scoped report
         "incident_report_title": "DOCSight Rapport de plainte",
         "section_incident_summary": "Resume de l'incident",
@@ -587,6 +746,13 @@ REPORT_STRINGS = {
             "Consulte los datos de monitorización adjuntos para más detalles."
         ),
         "complaint_short_closing": "Atentamente,\n[Su nombre]",
+        # Diagnostic notes
+        "section_diagnostic_notes": "Notas de diagnóstico",
+        "diag_note_high": "Canal {ch} ({ch_type}): {metric} de {value} dBmV supera el máximo de la especificación DOCSIS ({spec} dBmV) en un {pct}%.",
+        "diag_note_low": "Canal {ch} ({ch_type}): {metric} de {value} dBmV está por debajo del mínimo de la especificación DOCSIS ({spec} dBmV) en un {pct}%.",
+        "diag_note_snr_low": "Canal {ch} ({ch_type}): {metric} de {value} dB está por debajo del mínimo de la especificación DOCSIS ({spec} dB) en un {pct}%.",
+        "diag_note_isp_hint": "Valores tan alejados de la especificación suelen indicar un problema de configuración o infraestructura del proveedor, no un problema del equipo del cliente.",
+        "complaint_diag_header": "Análisis diagnóstico:",
         # Incident-scoped report
         "incident_report_title": "DOCSight Informe de queja",
         "section_incident_summary": "Resumen del incidente",
@@ -860,6 +1026,48 @@ def generate_report(snapshots, current_analysis, config=None, connection_info=No
                 ch.get("health", ""),
             ], widths_us, health=ch.get("health"))
 
+    # --- Diagnostic Notes ---
+    if current_analysis:
+        diag_notes = _build_diagnostic_notes(current_analysis)
+        if diag_notes:
+            pdf.ln(4)
+            pdf._section_title(s.get("section_diagnostic_notes", "Diagnostic Notes"))
+            pdf.set_font("dejavu", "", 9)
+            for note in diag_notes:
+                if "spec_max" in note:
+                    if note["type"] == "snr_low":
+                        tmpl = s.get("diag_note_snr_low", "Channel {ch} ({ch_type}): {metric} of {value} dB below spec minimum ({spec} dB) by {pct}%.")
+                    else:
+                        tmpl = s.get("diag_note_high", "Channel {ch} ({ch_type}): {metric} of {value} dBmV exceeds spec maximum ({spec} dBmV) by {pct}%.")
+                    text = tmpl.format(
+                        ch=note["channel_id"], ch_type=note["channel_type"],
+                        metric=note["metric"], value=note["value"],
+                        spec=note["spec_max"], pct=note["deviation_pct"],
+                    )
+                elif "spec_min" in note:
+                    if note["type"] == "snr_low":
+                        tmpl = s.get("diag_note_snr_low", "Channel {ch} ({ch_type}): {metric} of {value} dB below spec minimum ({spec} dB) by {pct}%.")
+                    else:
+                        tmpl = s.get("diag_note_low", "Channel {ch} ({ch_type}): {metric} of {value} dBmV below spec minimum ({spec} dBmV) by {pct}%.")
+                    text = tmpl.format(
+                        ch=note["channel_id"], ch_type=note["channel_type"],
+                        metric=note["metric"], value=note["value"],
+                        spec=note["spec_min"], pct=note["deviation_pct"],
+                    )
+                else:
+                    continue
+                r, g, b = pdf._health_color("critical")
+                pdf.set_text_color(r, g, b)
+                pdf.multi_cell(0, 4, f"  {text}", new_x="LMARGIN", new_y="NEXT")
+            # ISP hint if any extreme notes
+            if any(n.get("severity") == "extreme" for n in diag_notes):
+                pdf.ln(2)
+                pdf.set_text_color(0, 0, 0)
+                pdf.set_font("dejavu", "I", 9)
+                pdf.multi_cell(0, 4, s.get("diag_note_isp_hint", ""), new_x="LMARGIN", new_y="NEXT")
+            pdf.set_text_color(0, 0, 0)
+            pdf.set_font("dejavu", "", 10)
+
     # --- Historical Analysis ---
     if snapshots:
         pdf.add_page()
@@ -917,6 +1125,12 @@ def generate_report(snapshots, current_analysis, config=None, connection_info=No
     pdf._section_title(s["section_complaint"])
     pdf.set_font("dejavu", "", 9)
 
+    diag_complaint = ""
+    if current_analysis:
+        diag_complaint = _format_diagnostic_complaint(
+            _build_diagnostic_notes(current_analysis), s
+        )
+
     if snapshots:
         worst = _compute_worst_values(snapshots)
         warn = _default_warn_thresholds()
@@ -933,6 +1147,7 @@ def generate_report(snapshots, current_analysis, config=None, connection_info=No
             f"- {s['complaint_us_power'].format(val=worst['us_power_max'], thresh=warn['us_power'])}\n"
             f"- {s['complaint_snr'].format(val=worst['ds_snr_min'], thresh=warn['snr'])}\n"
             f"- {s['complaint_uncorr'].format(val='{:,}'.format(worst['ds_uncorrectable_max']))}\n\n"
+            f"{diag_complaint}"
             f"{s['complaint_exceed']}\n\n"
             f"{s['complaint_request']}\n"
             f"1. {s['complaint_req1']}\n"
@@ -1275,7 +1490,7 @@ def generate_incident_report(incident, entries, snapshots, speedtests, bnetz_lis
 
 def generate_complaint_text(snapshots, config=None, connection_info=None, lang="en",
                             customer_name="", customer_number="", customer_address="",
-                            bnetz_data=None):
+                            bnetz_data=None, current_analysis=None):
     """Generate ISP complaint letter as plain text.
 
     Args:
@@ -1287,6 +1502,7 @@ def generate_complaint_text(snapshots, config=None, connection_info=None, lang="
         customer_number: Customer/contract number
         customer_address: Customer address
         bnetz_data: Optional BNetzA measurement dict
+        current_analysis: Optional current analysis dict for diagnostic notes
 
     Returns:
         str: Complaint letter text
@@ -1337,6 +1553,12 @@ def generate_complaint_text(snapshots, config=None, connection_info=None, lang="
             bnetz_lines.append(s.get("complaint_bnetz_legal", ""))
         bnetz_section = "\n".join(bnetz_lines) + "\n\n"
 
+    diag_complaint = ""
+    if current_analysis:
+        diag_complaint = _format_diagnostic_complaint(
+            _build_diagnostic_notes(current_analysis), s
+        )
+
     if snapshots:
         worst = _compute_worst_values(snapshots)
         warn = _default_warn_thresholds()
@@ -1353,6 +1575,7 @@ def generate_complaint_text(snapshots, config=None, connection_info=None, lang="
             f"- {s['complaint_us_power'].format(val=worst['us_power_max'], thresh=warn['us_power'])}\n"
             f"- {s['complaint_snr'].format(val=worst['ds_snr_min'], thresh=warn['snr'])}\n"
             f"- {s['complaint_uncorr'].format(val='{:,}'.format(worst['ds_uncorrectable_max']))}\n\n"
+            f"{diag_complaint}"
             f"{bnetz_section}"
             f"{s['complaint_exceed']}\n\n"
             f"{s['complaint_request']}\n"

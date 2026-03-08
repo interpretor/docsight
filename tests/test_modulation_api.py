@@ -1,7 +1,7 @@
 """Tests for modulation performance API routes (v2)."""
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -10,16 +10,10 @@ from app.config import ConfigManager
 from app.storage import SnapshotStorage
 
 
-def _ts(days_ago=1, hour=10):
-    """Return a UTC timestamp string N days ago at the given hour."""
-    dt = datetime.utcnow().replace(hour=hour, minute=0, second=0, microsecond=0) - timedelta(days=days_ago)
-    return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-
-
-def _date(days_ago=1):
-    """Return a date string N days ago."""
-    dt = datetime.utcnow() - timedelta(days=days_ago)
-    return dt.strftime("%Y-%m-%d")
+def _ts_days_ago(days):
+    """Return a UTC ISO timestamp for N days ago at 10:00."""
+    dt = datetime.now(timezone.utc) - timedelta(days=days)
+    return dt.replace(hour=10, minute=0, second=0, microsecond=0).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _ensure_blueprint():
@@ -92,7 +86,7 @@ class TestDistributionEndpoint:
 
     def test_default_params(self, client_with_storage):
         client, storage = client_with_storage
-        _store_snapshot(storage, _ts(1),
+        _store_snapshot(storage, _ts_days_ago(1),
                         us_channels=[{"modulation": "64QAM", "channel_id": 1, "docsis_version": "3.0"}])
         resp = client.get("/api/modulation/distribution")
         data = resp.get_json()
@@ -100,7 +94,7 @@ class TestDistributionEndpoint:
 
     def test_direction_param_ds(self, client_with_storage):
         client, storage = client_with_storage
-        _store_snapshot(storage, _ts(1),
+        _store_snapshot(storage, _ts_days_ago(1),
                         us_channels=[{"modulation": "64QAM", "channel_id": 1, "docsis_version": "3.0"}],
                         ds_channels=[{"modulation": "256QAM", "channel_id": 1, "docsis_version": "3.0"}])
         resp = client.get("/api/modulation/distribution?direction=ds")
@@ -123,7 +117,7 @@ class TestDistributionEndpoint:
 
     def test_response_has_protocol_groups(self, client_with_storage):
         client, storage = client_with_storage
-        _store_snapshot(storage, _ts(1),
+        _store_snapshot(storage, _ts_days_ago(1),
                         us_channels=[{"modulation": "64QAM", "channel_id": 1, "docsis_version": "3.0"}])
         resp = client.get("/api/modulation/distribution")
         data = resp.get_json()
@@ -136,7 +130,7 @@ class TestDistributionEndpoint:
 
     def test_protocol_group_structure(self, client_with_storage):
         client, storage = client_with_storage
-        _store_snapshot(storage, _ts(1),
+        _store_snapshot(storage, _ts_days_ago(1),
                         us_channels=[{"modulation": "64QAM", "channel_id": 1, "docsis_version": "3.0"}])
         resp = client.get("/api/modulation/distribution")
         data = resp.get_json()
@@ -174,14 +168,13 @@ class TestIntradayEndpoint:
 
     def test_returns_channel_timeline(self, client_with_storage):
         client, storage = client_with_storage
-        day = _date(1)
-        _store_snapshot(storage, _ts(1, hour=10),
+        _store_snapshot(storage, "2026-03-05T10:00:00Z",
                         us_channels=[{"modulation": "64QAM", "channel_id": 1,
                                       "docsis_version": "3.0", "frequency": "51.000"}])
-        _store_snapshot(storage, _ts(1, hour=14),
+        _store_snapshot(storage, "2026-03-05T14:00:00Z",
                         us_channels=[{"modulation": "16QAM", "channel_id": 1,
                                       "docsis_version": "3.0", "frequency": "51.000"}])
-        resp = client.get(f"/api/modulation/intraday?direction=us&date={day}")
+        resp = client.get("/api/modulation/intraday?direction=us&date=2026-03-05")
         data = resp.get_json()
         assert len(data["protocol_groups"]) == 1
         pg = data["protocol_groups"][0]
@@ -192,11 +185,10 @@ class TestIntradayEndpoint:
 
     def test_direction_param(self, client_with_storage):
         client, storage = client_with_storage
-        day = _date(1)
-        _store_snapshot(storage, _ts(1),
+        _store_snapshot(storage, "2026-03-05T10:00:00Z",
                         ds_channels=[{"modulation": "256QAM", "channel_id": 1,
                                       "docsis_version": "3.0", "frequency": "114.000"}])
-        resp = client.get(f"/api/modulation/intraday?direction=ds&date={day}")
+        resp = client.get("/api/modulation/intraday?direction=ds&date=2026-03-05")
         data = resp.get_json()
         assert data["direction"] == "ds"
         assert len(data["protocol_groups"]) > 0
@@ -223,19 +215,21 @@ class TestTrendEndpoint:
 
     def test_returns_per_day_entries(self, client_with_storage):
         client, storage = client_with_storage
-        _store_snapshot(storage, _ts(2),
+        ts_2 = _ts_days_ago(2)
+        ts_1 = _ts_days_ago(1)
+        _store_snapshot(storage, ts_2,
                         us_channels=[{"modulation": "64QAM", "channel_id": 1, "docsis_version": "3.0"}])
-        _store_snapshot(storage, _ts(1),
+        _store_snapshot(storage, ts_1,
                         us_channels=[{"modulation": "256QAM", "channel_id": 1, "docsis_version": "3.0"}])
         resp = client.get("/api/modulation/trend?days=7")
         data = resp.get_json()
         assert len(data) == 2
-        assert data[0]["date"] == _date(2)
-        assert data[1]["date"] == _date(1)
+        assert data[0]["date"] == ts_2[:10]
+        assert data[1]["date"] == ts_1[:10]
 
     def test_trend_entry_fields(self, client_with_storage):
         client, storage = client_with_storage
-        _store_snapshot(storage, _ts(1),
+        _store_snapshot(storage, _ts_days_ago(1),
                         us_channels=[{"modulation": "64QAM", "channel_id": 1, "docsis_version": "3.0"}])
         resp = client.get("/api/modulation/trend")
         data = resp.get_json()
