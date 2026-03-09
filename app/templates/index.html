@@ -2254,6 +2254,11 @@ var T = {{ t|tojson }};
             if (typeof loadTrends === 'function') loadTrends(_trendRange);
         } else if (view === 'modulation') {
             if (typeof initModulation === 'function') initModulation();
+        } else if (view.indexOf('mod-') === 0) {
+            /* Generic module init: mod-docsight-comparison → initComparison */
+            var parts = view.replace('mod-docsight-', '').split('-');
+            var fnName = 'init' + parts.map(function(w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join('');
+            if (typeof window[fnName] === 'function') window[fnName]();
         }
 
         // Re-initialize Lucide icons after view switch
