@@ -39,6 +39,8 @@ _LOGIN_MARKERS = (
     "sessionstorage.getitem('privatekey')",
     "sessionstorage.getitem(\"privatekey\")",
 )
+_RE_TITLE = re.compile(r"<title[^>]*>(.*?)</title>", re.IGNORECASE | re.DOTALL)
+_RE_FORM_ACTION = re.compile(r"<form[^>]+action=['\"]([^'\"]+)['\"]", re.IGNORECASE)
 
 # Fields per channel for each section (after the leading count value).
 _DS_QAM_FIELDS = 9   # num|lock|mod|chID|freq|power|snr|corrErr|uncorrErr
@@ -86,6 +88,9 @@ class CM3000Driver(ModemDriver):
                 raise RuntimeError("CM3000 authentication failed: connection refused after retry")
             except requests.RequestException as e:
                 raise RuntimeError(f"CM3000 authentication failed: {e}")
+            except RuntimeError as e:
+                self._log_status_page_diagnostics(r.text, "login")
+                raise e
 
     def get_docsis_data(self) -> dict:
         """Retrieve DOCSIS channel data from JavaScript on status page.
@@ -166,7 +171,11 @@ class CM3000Driver(ModemDriver):
             r.raise_for_status()
         except requests.RequestException as e:
             raise RuntimeError(f"CM3000 status page retrieval failed: {e}")
-        self._ensure_status_page(r.text)
+        try:
+            self._ensure_status_page(r.text)
+        except RuntimeError:
+            self._log_status_page_diagnostics(r.text, "fetch")
+            raise
         return r.text
 
     @staticmethod
@@ -199,6 +208,59 @@ class CM3000Driver(ModemDriver):
             raise RuntimeError(
                 "CM3000 status page did not contain the expected DOCSIS data blocks"
             )
+
+    @staticmethod
+    def _status_page_diagnostics(html: str) -> dict:
+        """Summarize the response shape for debugging failed CM3000 auth."""
+        if not html:
+            return {
+                "length": 0,
+                "title": "",
+                "form_action": "",
+                "login_markers": [],
+                "has_sys_info": False,
+                "has_channel_data": False,
+            }
+
+        lower_html = html.lower()
+        title_match = _RE_TITLE.search(html)
+        form_match = _RE_FORM_ACTION.search(html)
+        login_markers = [marker for marker in _LOGIN_MARKERS if marker in lower_html]
+        has_sys_info = bool(CM3000Driver._extract_tag_value_list(html, "InitTagValue"))
+        has_channel_data = any(
+            CM3000Driver._extract_tag_value_list(html, function_name)
+            for function_name in (
+                "InitDsTableTagValue",
+                "InitUsTableTagValue",
+                "InitDsOfdmTableTagValue",
+                "InitUsOfdmaTableTagValue",
+            )
+        )
+
+        return {
+            "length": len(html),
+            "title": (title_match.group(1).strip() if title_match else ""),
+            "form_action": (form_match.group(1).strip() if form_match else ""),
+            "login_markers": login_markers,
+            "has_sys_info": has_sys_info,
+            "has_channel_data": has_channel_data,
+        }
+
+    @staticmethod
+    def _log_status_page_diagnostics(html: str, context: str) -> None:
+        """Emit a compact debug summary of the CM3000 response page."""
+        diag = CM3000Driver._status_page_diagnostics(html)
+        log.debug(
+            "CM3000 %s diagnostics: len=%s title=%r form_action=%r login_markers=%s "
+            "has_sys_info=%s has_channel_data=%s",
+            context,
+            diag["length"],
+            diag["title"],
+            diag["form_action"],
+            ",".join(diag["login_markers"]) or "(none)",
+            diag["has_sys_info"],
+            diag["has_channel_data"],
+        )
 
     # -- Channel parsers --
 

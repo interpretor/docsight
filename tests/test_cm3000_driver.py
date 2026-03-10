@@ -551,6 +551,37 @@ class TestRegexPatterns:
         )
 
 
+class TestDiagnostics:
+    def test_status_page_diagnostics_for_valid_page(self):
+        diag = CM3000Driver._status_page_diagnostics(STATUS_HTML)
+        assert diag["title"] == "NETGEAR - Cable Modem CM3000"
+        assert diag["form_action"] == ""
+        assert diag["login_markers"] == []
+        assert diag["has_sys_info"] is True
+        assert diag["has_channel_data"] is True
+
+    def test_status_page_diagnostics_for_login_page(self):
+        html = """
+            <html><head><title>Login</title></head>
+            <body>
+              <script>
+                if (sessionStorage.getItem('PrivateKey') === null) {
+                    window.location.replace('../Login.htm');
+                }
+              </script>
+              <form action='/goform/Login'></form>
+            </body></html>
+        """
+        diag = CM3000Driver._status_page_diagnostics(html)
+        assert diag["title"] == "Login"
+        assert diag["form_action"] == "/goform/Login"
+        assert "login.htm" in diag["login_markers"]
+        assert "window.location.replace" in diag["login_markers"]
+        assert "sessionstorage.getitem('privatekey')" in diag["login_markers"]
+        assert diag["has_sys_info"] is False
+        assert diag["has_channel_data"] is False
+
+
 # -- Collect cycle (cache reuse) --
 
 class TestCollectCycle:
