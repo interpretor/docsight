@@ -95,6 +95,7 @@ Open `http://localhost:8765` — no setup required.
 |---|---|
 | **[Live Dashboard](https://github.com/itsDNNS/docsight/wiki/Features-Dashboard)** | Real-time channel data with health assessment, metric cards, and compact mode with expandable channel details |
 | **[Signal Trends](https://github.com/itsDNNS/docsight/wiki/Features-Signal-Trends)** | Interactive charts with DOCSIS reference zones (day/week/month) |
+| **[Before/After Comparison](https://github.com/itsDNNS/docsight/wiki/Features-Before-After-Comparison)** | Compare two time periods side by side with presets, delta summaries, health distribution, and complaint-ready evidence |
 | **[Correlation Analysis](https://github.com/itsDNNS/docsight/wiki/Features-Correlation-Analysis)** | Unified timeline combining signal, speedtest, and event data |
 | **[Gaming Quality Index](https://github.com/itsDNNS/docsight/wiki/Features-Gaming-Quality)** | **NEW:** A-F grade for gaming readiness based on latency, jitter, and signal health |
 | **[Modulation Performance](https://github.com/itsDNNS/docsight/wiki/Features-Modulation-Performance)** | **NEW:** Per-protocol-group modulation health index with intraday channel drill-down |
@@ -103,7 +104,7 @@ Open `http://localhost:8765` — no setup required.
 | **[Event Log](https://github.com/itsDNNS/docsight/wiki/Features-Event-Log)** | Automatic anomaly detection with modulation watchdog |
 | **[Speedtest Integration](https://github.com/itsDNNS/docsight/wiki/Features-Speedtest)** | Speed test history from [Speedtest Tracker](https://github.com/alexjustesen/speedtest-tracker) |
 | **[Incident Journal](https://github.com/itsDNNS/docsight/wiki/Features-Incident-Journal)** | Document ISP issues with icons, Excel/CSV import, search, attachments, **incident groups**, and export (CSV/JSON/Markdown) |
-| **[Complaint Generator](https://github.com/itsDNNS/docsight/wiki/Filing-a-Complaint)** | Editable ISP letter + downloadable technical PDF with diagnostic notes for out-of-spec values |
+| **[Complaint Generator](https://github.com/itsDNNS/docsight/wiki/Filing-a-Complaint)** | Editable ISP letter + downloadable technical PDF with diagnostic notes and optional active comparison evidence |
 | **[Channel Timeline](https://github.com/itsDNNS/docsight/wiki/Features-Channel-Timeline)** | Per-channel power, SNR, error, and modulation history over time with multi-channel comparison overlay |
 | **[Home Assistant](https://github.com/itsDNNS/docsight/wiki/Home-Assistant)** | MQTT Auto-Discovery with per-channel sensors |
 | **[BQM Integration](https://github.com/itsDNNS/docsight/wiki/Features-BQM)** | ThinkBroadband broadband quality graphs |
@@ -298,11 +299,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). **Please open an issue before working on
 | Arris SB6141 Support | ✅ Released | [#174](https://github.com/itsDNNS/docsight/issues/174) |
 | Cable Segment Utilization | ✅ Released | [#188](https://github.com/itsDNNS/docsight/issues/188) |
 
-**Planned:**
-
-| Feature | Issue |
-|---|---|
-| Before/After Comparison | [#50](https://github.com/itsDNNS/docsight/issues/50) |
+| Before/After Comparison | Released | [#50](https://github.com/itsDNNS/docsight/issues/50) |
 
 See the **[full roadmap](https://github.com/itsDNNS/docsight/wiki/Roadmap)** in the wiki for long-term goals and modem support plans.
 
@@ -319,7 +316,7 @@ If DOCSight helps you, you can support development here:
 
 ## Documentation
 
-Documentation current as of **v2026-03-09.1**.
+Documentation current as of **v2026-03-10.1**.
 
 | Document | Scope |
 |---|---|
