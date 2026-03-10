@@ -8,7 +8,9 @@ var _modIntradayCharts = [];
 /* QAM color scheme */
 var QAM_COLORS = {
     '4QAM':    '#ef4444',
+    '8QAM':    '#fb7185',
     '16QAM':   '#f97316',
+    '32QAM':   '#f59e0b',
     '64QAM':   '#eab308',
     '128QAM':  '#84cc16',
     '256QAM':  '#22c55e',
@@ -19,6 +21,22 @@ var QAM_COLORS = {
     'OFDMA':   '#8b5cf6',
     'Unknown': '#6b7280'
 };
+
+var MODULATION_LEVELS = [
+    '4QAM',
+    '8QAM',
+    '16QAM',
+    '32QAM',
+    '64QAM',
+    '128QAM',
+    '256QAM',
+    '512QAM',
+    '1024QAM',
+    '4096QAM',
+    'OFDM',
+    'OFDMA',
+    'Unknown'
+];
 
 /* ── Direction tabs ── */
 var dirTabs = document.querySelectorAll('#modulation-direction-tabs .trend-tab');
@@ -206,6 +224,9 @@ function renderProtocolGroups(data) {
         barDiv.style.height = '100%';
         barWrap.appendChild(barDiv);
         barCard.appendChild(barWrap);
+        var legendDiv = _el('div', 'modulation-custom-legend');
+        legendDiv.id = 'mod-dist-legend-' + idx;
+        barCard.appendChild(legendDiv);
         chartsGrid.appendChild(barCard);
 
         // Trend line chart card
@@ -245,8 +266,10 @@ function _buildMiniKPI(label, value, cls) {
 
 function renderGroupDistChart(pg, idx) {
     var container = document.getElementById('mod-dist-chart-' + idx);
+    var legendContainer = document.getElementById('mod-dist-legend-' + idx);
     if (!container) return;
     container.textContent = '';
+    if (legendContainer) legendContainer.textContent = '';
 
     var days = pg.days || [];
     var labels = days.map(function(d) { return d.date.slice(5); }); /* MM-DD, drop year */
@@ -269,8 +292,10 @@ function renderGroupDistChart(pg, idx) {
     /* Build cumulative sums for each modulation layer */
     var cumData = xData.map(function() { return 0; });
     var layerData = [];
+    var rawSeriesByMod = {};
     modKeys.forEach(function(mod) {
         var raw = days.map(function(d) { return (d.distribution || {})[mod] || 0; });
+        rawSeriesByMod[mod] = raw;
         var stacked = raw.map(function(v, j) { cumData[j] += v; return cumData[j]; });
         layerData.push({ mod: mod, data: stacked });
     });
@@ -289,6 +314,10 @@ function renderGroupDistChart(pg, idx) {
             paths: barPaths,
             points: { show: false }
         });
+    }
+
+    if (legendContainer) {
+        renderDistributionLegend(legendContainer, modKeys);
     }
 
     var w = container.offsetWidth || 400;
@@ -321,8 +350,13 @@ function renderGroupDistChart(pg, idx) {
         ],
         series: uSeries,
         cursor: { show: true, x: true, y: false, points: { show: false } },
-        legend: { show: true, live: false },
-        plugins: [tooltipPlugin(labels)]
+        legend: { show: false, live: false },
+        plugins: [tooltipPlugin(labels, function(ctx) {
+            var mod = ctx.dataset.label;
+            var rawSeries = rawSeriesByMod[mod] || [];
+            var raw = rawSeries[ctx.dataIndex] || 0;
+            return mod + ': ' + raw.toFixed(1) + '%';
+        })]
     }, uData, container);
     _modCharts.push(chart);
 }
@@ -523,7 +557,7 @@ function renderChannelTimeline(canvasId, timeline) {
     var dataPoints = timeline.map(function(t) { return modSortOrder(t.modulation); });
     var n = labels.length;
     var textColor = _cssVar('--text-secondary') || '#9ca3af';
-    var qamLabels = ['4QAM', '16QAM', '64QAM', '128QAM', '256QAM', '512QAM', '1024QAM', '4096QAM', 'OFDM', 'OFDMA', 'Unknown'];
+    var qamLabels = MODULATION_LEVELS;
 
     var xData = [];
     for (var i = 0; i < n; i++) xData.push(i);
@@ -535,7 +569,7 @@ function renderChannelTimeline(canvasId, timeline) {
         height: h,
         scales: {
             x: { time: false, range: function() { return [-0.5, n - 0.5]; } },
-            y: { range: [-0.5, 10.5] }
+            y: { range: [-0.5, qamLabels.length - 0.5] }
         },
         axes: [
             {
@@ -556,7 +590,9 @@ function renderChannelTimeline(canvasId, timeline) {
                 scale: 'y',
                 stroke: textColor,
                 grid: { stroke: 'rgba(255,255,255,0.04)', width: 1 },
-                splits: function() { return [0,1,2,3,4,5,6,7,8,9,10]; },
+                splits: function() {
+                    return qamLabels.map(function(_, idx) { return idx; });
+                },
                 values: function(u, vals) { return vals.map(function(v) { return qamLabels[v] || ''; }); },
                 font: '10px system-ui',
                 size: 60
@@ -609,8 +645,22 @@ function densityClass(v) {
     return 'critical';
 }
 function modSortOrder(mod) {
-    var order = { '4QAM': 0, '16QAM': 1, '64QAM': 2, '128QAM': 3, '256QAM': 4, '512QAM': 5, '1024QAM': 6, '4096QAM': 7, 'OFDM': 8, 'OFDMA': 9, 'Unknown': 10 };
-    return order[mod] !== undefined ? order[mod] : 11;
+    var order = {};
+    MODULATION_LEVELS.forEach(function(label, idx) {
+        order[label] = idx;
+    });
+    return order[mod] !== undefined ? order[mod] : (MODULATION_LEVELS.length - 1);
+}
+
+function renderDistributionLegend(container, modKeys) {
+    modKeys.forEach(function(mod) {
+        var item = _el('div', 'modulation-custom-legend-item');
+        var swatch = _el('span', 'modulation-custom-legend-swatch');
+        swatch.style.background = QAM_COLORS[mod] || '#6b7280';
+        item.appendChild(swatch);
+        item.appendChild(_el('span', 'modulation-custom-legend-label', mod));
+        container.appendChild(item);
+    });
 }
 
 function destroyCharts() {

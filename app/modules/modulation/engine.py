@@ -250,6 +250,8 @@ def _weighted_avg(values_weights):
 
 def _build_protocol_group(version, direction, by_date, sorted_dates, threshold):
     """Build a single protocol group result dict."""
+    effective_threshold = _degraded_qam_threshold(direction, version, threshold)
+
     # Collect observations per day, only for channels of this version
     all_observations = []
     channel_ids = set()
@@ -275,14 +277,14 @@ def _build_protocol_group(version, direction, by_date, sorted_dates, threshold):
 
         all_observations.extend(day_observations)
         hi = _health_index_for_group(day_observations, direction, version)
-        lq = _low_qam_pct(day_observations, threshold)
+        lq = _low_qam_pct(day_observations, effective_threshold)
 
         # Count degraded channels for this day
         degraded = _count_degraded_channels_day(
             by_date[date_str],
             version,
             direction,
-            _degraded_qam_threshold(direction, version, threshold),
+            effective_threshold,
         )
 
         days.append({
@@ -296,7 +298,7 @@ def _build_protocol_group(version, direction, by_date, sorted_dates, threshold):
     max_qam = MAX_QAM.get((direction, version), 4096)
     max_qam_label = f"{max_qam}QAM"
     overall_hi = _health_index_for_group(all_observations, direction, version)
-    overall_lq = _low_qam_pct(all_observations, threshold)
+    overall_lq = _low_qam_pct(all_observations, effective_threshold)
     overall_dist = _distribution_pct(all_observations)
     dominant = max(overall_dist, key=overall_dist.get) if overall_dist else None
 
@@ -306,7 +308,7 @@ def _build_protocol_group(version, direction, by_date, sorted_dates, threshold):
         sorted_dates,
         version,
         direction,
-        _degraded_qam_threshold(direction, version, threshold),
+        effective_threshold,
     )
 
     return {

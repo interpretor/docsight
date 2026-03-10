@@ -467,6 +467,7 @@ class TestComputeDistributionV2:
         pg = result["protocol_groups"][0]
         assert pg["docsis_version"] == "3.1"
         assert pg["degraded_channel_count"] == 1
+        assert pg["low_qam_pct"] == 100.0
 
     def test_us31_512qam_not_counted_as_degraded(self):
         us_channels = [
@@ -477,6 +478,20 @@ class TestComputeDistributionV2:
         pg = result["protocol_groups"][0]
         assert pg["docsis_version"] == "3.1"
         assert pg["degraded_channel_count"] == 0
+
+    def test_us31_low_qam_pct_tracks_protocol_threshold(self):
+        snaps = [
+            _make_snapshot("2026-03-01T10:00:00Z",
+                           us_channels=[{"channel_id": 41, "modulation": "1024QAM", "docsis_version": "3.1"}]),
+            _make_snapshot("2026-03-01T14:00:00Z",
+                           us_channels=[{"channel_id": 41, "modulation": "128QAM", "docsis_version": "3.1"}]),
+            _make_snapshot("2026-03-01T18:00:00Z",
+                           us_channels=[{"channel_id": 41, "modulation": "512QAM", "docsis_version": "3.1"}]),
+        ]
+        result = compute_distribution_v2(snaps, "us", "UTC")
+        pg = result["protocol_groups"][0]
+        assert pg["low_qam_pct"] == 33.3
+        assert pg["days"][0]["low_qam_pct"] == 33.3
 
     def test_per_day_data(self):
         snaps = [

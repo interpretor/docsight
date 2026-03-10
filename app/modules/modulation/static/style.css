@@ -180,6 +180,29 @@
     font-size: 0.8em;
 }
 
+.modulation-custom-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    margin-top: 12px;
+    font-size: 0.75em;
+    color: var(--text-secondary, var(--muted));
+}
+
+.modulation-custom-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.modulation-custom-legend-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
 @media (max-width: 768px) {
     .modulation-kpi-row {
         grid-template-columns: 1fr;
