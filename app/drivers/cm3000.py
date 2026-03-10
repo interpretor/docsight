@@ -11,7 +11,8 @@ Five JS functions each contain a ``var tagValueList = '...'`` string:
 - InitUsOfdmaTableTagValue() -- US OFDMA  (2 channels, 6 fields each)
 - InitTagValue()             -- system/device info
 
-Auth is HTTP Basic Auth (standard for Netgear Nighthawk modems).
+Authentication starts with direct status page access and falls back to the
+web login form on firmware that redirects through Login.htm first.
 """
 
 import logging
@@ -60,7 +61,8 @@ _RE_BLOCK_COMMENT = re.compile(r"/\*.*?\*/", re.DOTALL)
 class CM3000Driver(ModemDriver):
     """Driver for Netgear CM3000 DOCSIS 3.1 cable modem.
 
-    Authentication uses HTTP Basic Auth (IP-based session).
+    Authentication uses direct DocsisStatus access with a Login.htm form
+    fallback on newer firmware variants.
     DOCSIS data is extracted from JavaScript variables on /DocsisStatus.htm.
     """
 

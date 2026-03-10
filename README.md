@@ -168,7 +168,7 @@ Open `http://localhost:8765` — no setup required.
 | **Arris Touchstone CM8200A** | ✅ Fully supported | ISP-branded DOCSIS 3.1 |
 | **AVM Fritz!Box Cable** (6490, 6590, 6591, 6660, 6690) | ✅ Fully supported | |
 | **Hitron CODA-56** | ✅ Fully supported | DOCSIS 3.1 |
-| **Netgear CM3000** | ✅ Fully supported | DOCSIS 3.1 standalone |
+| **Netgear CM3000** | ✅ Fully supported | DOCSIS 3.1 standalone, JS parsing, `Login.htm` fallback |
 | **Sagemcom F@st 3896** | ✅ Fully supported | JSON-RPC API |
 | **Unitymedia Connect Box** (CH7465) | ✅ Fully supported | |
 | **Vodafone Station** (CGA4233, TG3442DE) | ✅ Fully supported | Bridge mode compatible |
