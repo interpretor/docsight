@@ -159,6 +159,14 @@
                     <i data-lucide="clipboard-list"></i> {{ t.incident_journal }}
                 </a>
                 {% endif %}
+                <a class="nav-item" id="export-link" href="javascript:void(0)" onclick="exportForLLM()">
+                    <i data-lucide="file-output"></i> {{ t.export_llm }}
+                </a>
+                {% if modules|selectattr('id', 'equalto', 'docsight.reports')|list %}
+                <a class="nav-item" id="report-link" href="javascript:void(0)" onclick="openReportModal()">
+                    <i data-lucide="file-text"></i> {{ t.incident_report }}
+                </a>
+                {% endif %}
             </div>
         </div>
         {% set tab_modules = [] %}
@@ -179,14 +187,6 @@
         </div>
         {% endif %}
         <div style="flex:1;"></div>
-        <a class="nav-item" id="export-link" href="javascript:void(0)" onclick="exportForLLM()">
-            <i data-lucide="file-output"></i> {{ t.export_llm }}
-        </a>
-        {% if modules|selectattr('id', 'equalto', 'docsight.reports')|list %}
-        <a class="nav-item" id="report-link" href="javascript:void(0)" onclick="openReportModal()">
-            <i data-lucide="file-text"></i> {{ t.incident_report }}
-        </a>
-        {% endif %}
         <a class="nav-item" href="/settings">
             <i data-lucide="settings"></i> {{ t.settings }}
         </a>
