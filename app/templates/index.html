@@ -75,9 +75,9 @@
                     <i data-lucide="bell"></i> {{ t.event_log }}
                     <span class="nav-badge" id="event-badge" style="display:none;"></span>
                 </a>
-                {% if modules|selectattr('id', 'equalto', 'docsight.modulation')|list %}
-                <a class="nav-item" data-view="modulation" data-nav-icon="bar-chart-3" data-nav-title="{{ t.get('docsight.modulation.title', 'Modulation Performance') }}">
-                    <i data-lucide="bar-chart-3"></i> {{ t.get('docsight.modulation.title', 'Modulation Performance') }}
+                {% if speedtest_configured or bqm_configured %}
+                <a class="nav-item" data-view="correlation" data-nav-icon="bar-chart-3" data-nav-title="{{ t.correlation_analysis }}">
+                    <i data-lucide="bar-chart-3"></i> {{ t.correlation_analysis }}
                 </a>
                 {% endif %}
                 <a class="nav-item" data-view="trends" data-nav-icon="trending-up" data-nav-title="{{ t.signal_trends }}">
@@ -86,14 +86,14 @@
                 <a class="nav-item" data-view="channels" data-nav-icon="layers" data-nav-title="{{ t.channels }}">
                     <i data-lucide="layers"></i> {{ t.channels }}
                 </a>
-                {% if speedtest_configured or bqm_configured %}
-                <a class="nav-item" data-view="correlation" data-nav-icon="bar-chart-3" data-nav-title="{{ t.correlation_analysis }}">
-                    <i data-lucide="bar-chart-3"></i> {{ t.correlation_analysis }}
+                {% if modules|selectattr('id', 'equalto', 'docsight.connection_monitor')|list %}
+                <a class="nav-item" data-view="connection-monitor" data-nav-icon="activity" data-nav-title="{{ t.get('docsight.connection_monitor.connection_monitor', 'Connection Monitor') }}">
+                    <i data-lucide="activity"></i> {{ t.get('docsight.connection_monitor.connection_monitor', 'Connection Monitor') }}
                 </a>
                 {% endif %}
-                {% if gaming_quality_enabled %}
-                <a class="nav-item" data-view="gaming" data-nav-icon="gamepad-2" data-nav-title="{{ t.gaming_quality_label }}">
-                    <i data-lucide="gamepad-2"></i> {{ t.gaming_quality_label }}
+                {% if is_fritzbox and segment_utilization_enabled %}
+                <a class="nav-item" data-view="segment-utilization" data-nav-icon="gauge" data-nav-title="{{ t.seg_title }}">
+                    <i data-lucide="gauge"></i> {{ t.seg_title }}
                 </a>
                 {% endif %}
                 {% if modules|selectattr('id', 'equalto', 'docsight.comparison')|list %}
@@ -101,9 +101,14 @@
                     <i data-lucide="git-compare-arrows"></i> {{ t.get('docsight.comparison.title', 'Before/After Comparison') }}
                 </a>
                 {% endif %}
-                {% if is_fritzbox and segment_utilization_enabled %}
-                <a class="nav-item" data-view="segment-utilization" data-nav-icon="gauge" data-nav-title="{{ t.seg_title }}">
-                    <i data-lucide="gauge"></i> {{ t.seg_title }}
+                {% if gaming_quality_enabled %}
+                <a class="nav-item" data-view="gaming" data-nav-icon="gamepad-2" data-nav-title="{{ t.gaming_quality_label }}">
+                    <i data-lucide="gamepad-2"></i> {{ t.gaming_quality_label }}
+                </a>
+                {% endif %}
+                {% if modules|selectattr('id', 'equalto', 'docsight.modulation')|list %}
+                <a class="nav-item" data-view="modulation" data-nav-icon="bar-chart-3" data-nav-title="{{ t.get('docsight.modulation.title', 'Modulation Performance') }}">
+                    <i data-lucide="bar-chart-3"></i> {{ t.get('docsight.modulation.title', 'Modulation Performance') }}
                 </a>
                 {% endif %}
             </div>
@@ -124,8 +129,8 @@
                 {% endif %}
                 {% if modules|selectattr('id', 'equalto', 'docsight.bqm')|list %}
                 {% if bqm_configured %}
-                <a class="nav-item" data-view="bqm" data-nav-icon="activity" data-nav-title="{{ t.bqm_title }}">
-                    <i data-lucide="activity"></i> {{ t.bqm_title }}
+                <a class="nav-item" data-view="bqm" data-nav-icon="chart-spline" data-nav-title="{{ t.bqm_title }}">
+                    <i data-lucide="chart-spline"></i> {{ t.bqm_title }}
                 </a>
                 {% else %}
                 <a class="nav-item" onclick="openBqmSetupModal()">
@@ -170,7 +175,7 @@
             </div>
         </div>
         {% set tab_modules = [] %}
-        {% for mod in modules if mod.template_paths.get('tab') and mod.id not in ('docsight.modulation', 'docsight.comparison') %}
+        {% for mod in modules if mod.template_paths.get('tab') and mod.id not in ('docsight.modulation', 'docsight.comparison', 'docsight.connection_monitor') %}
             {% if tab_modules.append(mod) %}{% endif %}
         {% endfor %}
         {% if tab_modules %}
@@ -501,16 +506,12 @@
             </div>
         </div>
         {% endif %}
-    </div>
 
-    {# ══════════════════════════════════════════════════════════════════════════
-       BREITBANDMESSUNG (BNetzA) - Conditional card, only shown when data exists
-       ══════════════════════════════════════════════════════════════════════════ #}
-    {% if bnetz_enabled and bnetz_latest and bnetz_latest.download_measured_avg is not none %}
-    {% set bnetz_dl_pct = ((bnetz_latest.download_measured_avg / bnetz_latest.download_max_tariff * 100)|round(0)|int) if bnetz_latest.download_max_tariff and bnetz_latest.download_measured_avg else 0 %}
-    {% set bnetz_ul_pct = ((bnetz_latest.upload_measured_avg / bnetz_latest.upload_max_tariff * 100)|round(0)|int) if bnetz_latest.upload_max_tariff and bnetz_latest.upload_measured_avg else 0 %}
-    {% set bnetz_has_deviation = bnetz_latest.verdict_download == 'deviation' or bnetz_latest.verdict_upload == 'deviation' %}
-    <div class="metrics-grid" style="grid-template-columns:1fr;">
+        {# ── BNetzA card (inline with other metric cards) ── #}
+        {% if bnetz_enabled and bnetz_latest and bnetz_latest.download_measured_avg is not none %}
+        {% set bnetz_dl_pct = ((bnetz_latest.download_measured_avg / bnetz_latest.download_max_tariff * 100)|round(0)|int) if bnetz_latest.download_max_tariff and bnetz_latest.download_measured_avg else 0 %}
+        {% set bnetz_ul_pct = ((bnetz_latest.upload_measured_avg / bnetz_latest.upload_max_tariff * 100)|round(0)|int) if bnetz_latest.upload_max_tariff and bnetz_latest.upload_measured_avg else 0 %}
+        {% set bnetz_has_deviation = bnetz_latest.verdict_download == 'deviation' or bnetz_latest.verdict_upload == 'deviation' %}
         <div class="metric-card glass">
             <div class="metric-header">
                 <span class="metric-label">{{ t.bnetz_title }}</span>
@@ -525,7 +526,22 @@
                 <span class="range">{{ bnetz_latest.date }} &middot; {{ bnetz_latest.provider }}</span>
             </div>
         </div>
+        {% endif %}
+
+        {# ── Connection Monitor card (inline with other metric cards) ── #}
+        {% if modules|selectattr('id', 'equalto', 'docsight.connection_monitor')|list %}
+        <div class="metric-card glass" id="connection-monitor-card" style="cursor:pointer;" onclick="switchView('connection-monitor')">
+            <div class="metric-label">
+                <i data-lucide="activity" style="width:14px;height:14px;"></i>
+                {{ t.get('docsight.connection_monitor.connection_monitor', 'Connection Monitor') }}
+            </div>
+            <div class="metric-value" id="cm-card-status">&mdash;</div>
+            <div class="metric-sub" id="cm-card-details"></div>
+        </div>
+        {% endif %}
     </div>
+    {% if modules|selectattr('id', 'equalto', 'docsight.connection_monitor')|list %}
+    <script src="/modules/docsight.connection_monitor/static/js/connection-monitor-card.js"></script>
     {% endif %}
 
     {# ══════════════════════════════════════════════════════════════════════════
@@ -589,7 +605,7 @@
     </div>
 
     {# ── Module Cards (mixed with core, sorted by order) ── #}
-    {% for mod in modules|sort(attribute='menu.order') if mod.template_paths.get('card') %}
+    {% for mod in modules|sort(attribute='menu.order') if mod.template_paths.get('card') and mod.id != 'docsight.connection_monitor' %}
     {% include mod.template_paths['card'] %}
     {% endfor %}
 
@@ -1800,7 +1816,7 @@
    MODULE VIEWS - Dynamically rendered from enabled modules with tab template
    ══════════════════════════════════════════════════════════════════════════ #}
 {% for mod in modules if mod.template_paths.get('tab') %}
-<div id="{% if mod.id == 'docsight.modulation' %}view-modulation{% elif mod.id == 'docsight.comparison' %}view-comparison{% else %}view-mod-{{ mod.id|replace('.', '-') }}{% endif %}" class="view">
+<div id="{% if mod.id == 'docsight.modulation' %}view-modulation{% elif mod.id == 'docsight.comparison' %}view-comparison{% elif mod.id == 'docsight.connection_monitor' %}view-connection-monitor{% else %}view-mod-{{ mod.id|replace('.', '-') }}{% endif %}" class="view">
     {% include mod.template_paths['tab'] %}
 </div>
 {% endfor %}
