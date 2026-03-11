@@ -100,7 +100,8 @@ Open `http://localhost:8765` — no setup required.
 | **[Gaming Quality Index](https://github.com/itsDNNS/docsight/wiki/Features-Gaming-Quality)** | **NEW:** A-F grade for gaming readiness based on latency, jitter, and signal health |
 | **[Modulation Performance](https://github.com/itsDNNS/docsight/wiki/Features-Modulation-Performance)** | **NEW:** Per-protocol-group modulation health index with intraday channel drill-down |
 | **[In-App Glossary](https://github.com/itsDNNS/docsight/wiki/Features-Glossary)** | Contextual help popovers explaining DOCSIS terminology directly on the dashboard |
-| **[Cable Segment Utilization](https://github.com/itsDNNS/docsight/wiki/Features-Segment-Utilization)** | **NEW:** FRITZ!Box cable segment load monitoring with downstream/upstream utilization charts |
+| **[Cable Segment Utilization](https://github.com/itsDNNS/docsight/wiki/Features-Segment-Utilization)** | FRITZ!Box cable segment load monitoring with downstream/upstream utilization charts |
+| **[Connection Monitor](https://github.com/itsDNNS/docsight/wiki/Features-Connection-Monitor)** | **NEW:** Always-on latency monitor with PingPlotter-style charts, outage detection, packet loss tracking, and CSV evidence export |
 | **[Event Log](https://github.com/itsDNNS/docsight/wiki/Features-Event-Log)** | Automatic anomaly detection with modulation watchdog |
 | **[Speedtest Integration](https://github.com/itsDNNS/docsight/wiki/Features-Speedtest)** | Speed test history from [Speedtest Tracker](https://github.com/alexjustesen/speedtest-tracker) |
 | **[Incident Journal](https://github.com/itsDNNS/docsight/wiki/Features-Incident-Journal)** | Document ISP issues with icons, Excel/CSV import, search, attachments, **incident groups**, and export (CSV/JSON/Markdown) |
