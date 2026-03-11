@@ -13,7 +13,12 @@ import zlib
 from datetime import datetime, timedelta, timezone
 
 from .base import Collector, CollectorResult
-from ..analyzer import _channel_bitrate_mbps, apply_spike_suppression
+from ..analyzer import (
+    _assess_us_channel,
+    _channel_bitrate_mbps,
+    _metric_healths,
+    apply_spike_suppression,
+)
 from ..gaming_index import compute_gaming_index
 
 log = logging.getLogger("docsis.collector.demo")
@@ -62,6 +67,55 @@ class DemoCollector(Collector):
             "connection_type": "Cable",
         }
 
+    @staticmethod
+    def _ofdma_profile_for_live_poll(poll_count):
+        """Return a short cycle so local demo instances show profile changes quickly."""
+        cycle = (
+            "256QAM",
+            "128QAM",
+            "256QAM",
+            "512QAM",
+            "1024QAM",
+            "512QAM",
+            "256QAM",
+            "128QAM",
+        )
+        return cycle[(max(poll_count, 1) - 1) % len(cycle)]
+
+    @staticmethod
+    def _ofdma_profile_for_history(hour, day_of_year, bad_period):
+        """Return a deterministic OFDMA profile that varies across hours and days."""
+        profile_by_severity = {
+            0: "1024QAM",
+            1: "512QAM",
+            2: "256QAM",
+            3: "128QAM",
+        }
+
+        severity = 0
+        if 0 <= hour < 6:
+            severity += 1
+        if 18 <= hour < 23:
+            severity += 1
+        if bad_period:
+            severity += 2
+        if day_of_year % 6 in (0, 1):
+            severity += 1
+        if 10 <= hour < 16 and not bad_period:
+            severity = max(0, severity - 1)
+
+        return profile_by_severity[min(severity, 3)]
+
+    @staticmethod
+    def _ofdma_power_offset(profile_modulation):
+        """Bias lower OFDMA profiles towards lower power to make the issue visible."""
+        return {
+            "1024QAM": 0.0,
+            "512QAM": -1.6,
+            "256QAM": -3.4,
+            "128QAM": -5.2,
+        }.get(profile_modulation, 0.0)
+
     def _generate_data(self):
         """Generate FritzBox-format DOCSIS data with per-poll variation."""
         base = _load_base_data()
@@ -86,7 +140,10 @@ class DemoCollector(Collector):
             ch["powerLevel"] = round(ch["powerLevel"] + random.uniform(-0.3, 0.3), 1)
 
         for ch in data["channelUs"].get("docsis31", []):
-            ch["powerLevel"] = round(ch["powerLevel"] + random.uniform(-0.3, 0.3), 1)
+            profile_modulation = self._ofdma_profile_for_live_poll(self._poll_count)
+            power = ch["powerLevel"] + self._ofdma_power_offset(profile_modulation) + random.uniform(-0.3, 0.3)
+            ch["profile_modulation"] = profile_modulation
+            ch["powerLevel"] = round(power, 1)
 
         return data
 
@@ -201,6 +258,7 @@ class DemoCollector(Collector):
 
         # Evening congestion window (19–23h): US channels 3+4 may degrade
         evening_congestion = 19 <= hour <= 23
+        ofdma_bad_period = bad_period and 3 <= hour <= 7
 
         # Build DS channels
         ds_channels = []
@@ -304,6 +362,42 @@ class DemoCollector(Collector):
                 "health": "good",
                 "health_detail": "",
                 "theoretical_bitrate": bitrate,
+            })
+
+        for ch in base["channelUs"].get("docsis31", []):
+            profile_modulation = self._ofdma_profile_for_history(hour, day_of_year, ofdma_bad_period)
+            power = (
+                ch["powerLevel"]
+                + diurnal * 0.2
+                + self._ofdma_power_offset(profile_modulation)
+                + random.uniform(-0.3, 0.3)
+            )
+            if ofdma_bad_period:
+                power -= random.uniform(0.5, 1.2)
+            power = round(power, 1)
+            us_total_power += power
+
+            us31_mod = ch.get("modulation") or ch.get("type", "OFDMA")
+            assessed_channel = {
+                "powerLevel": power,
+                "modulation": us31_mod,
+                "type": ch.get("type", "OFDMA"),
+            }
+            health, health_detail = _assess_us_channel(assessed_channel, "3.1")
+            metric_h = _metric_healths(health_detail.split(" + ") if health_detail else [])
+
+            us_channels.append({
+                "channel_id": ch["channelID"],
+                "frequency": ch["frequency"],
+                "power": power,
+                "modulation": us31_mod,
+                "profile_modulation": profile_modulation,
+                "multiplex": ch.get("multiplex", "OFDMA"),
+                "docsis_version": "3.1",
+                "health": health,
+                "health_detail": health_detail,
+                "theoretical_bitrate": _channel_bitrate_mbps(us31_mod),
+                **metric_h,
             })
 
         ds_count = len(ds_channels)

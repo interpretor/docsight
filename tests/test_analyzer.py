@@ -768,6 +768,25 @@ class TestOFDMAUpstream:
         health, detail = analyzer._assess_us_channel(ch)
         assert health == "good"
 
+    def test_analyze_preserves_ofdma_profile_modulation(self):
+        data = _make_data(
+            us31=[{
+                "channelID": 5,
+                "frequency": "18.000 - 44.000",
+                "powerLevel": "40.0",
+                "modulation": "OFDMA",
+                "profile_modulation": "128QAM",
+                "type": "OFDMA",
+                "multiplex": "OFDMA",
+            }]
+        )
+
+        result = analyze(data)
+        channel = result["us_channels"][0]
+        assert channel["modulation"] == "OFDMA"
+        assert channel["profile_modulation"] == "128QAM"
+        assert channel["power_health"] in ("warning", "critical", "tolerated")
+
 
 class TestPercentErrors:
     """Test percent-based error thresholds."""

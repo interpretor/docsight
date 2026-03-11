@@ -574,17 +574,42 @@ function buildIntradayInsights(ch) {
 function buildIntradayEventList(events) {
     var wrap = _el('div', 'mod-event-list');
     var visibleCount = Math.min(events.length, 4);
-    for (var i = 0; i < visibleCount; i++) {
-        wrap.appendChild(buildIntradayEvent(events[i]));
+    var hiddenRows = [];
+    for (var i = 0; i < events.length; i++) {
+        var row = buildIntradayEvent(events[i]);
+        if (i >= visibleCount) {
+            row.style.display = 'none';
+            hiddenRows.push(row);
+        }
+        wrap.appendChild(row);
     }
 
-    if (events.length > visibleCount) {
-        var more = _el(
-            'div',
-            'mod-event-more',
-            '+' + (events.length - visibleCount) + ' ' + (T['docsight.modulation.more_windows'] || 'more windows')
-        );
-        wrap.appendChild(more);
+    if (hiddenRows.length > 0) {
+        var expanded = false;
+        var toggle = _el('button', 'mod-event-toggle');
+        toggle.type = 'button';
+
+        function syncToggleLabel() {
+            if (expanded) {
+                toggle.textContent = T['docsight.modulation.show_fewer_windows'] || 'Show fewer';
+                toggle.classList.add('open');
+            } else {
+                toggle.textContent = '+' + hiddenRows.length + ' ' +
+                    (T['docsight.modulation.more_windows'] || 'more windows');
+                toggle.classList.remove('open');
+            }
+        }
+
+        toggle.addEventListener('click', function() {
+            expanded = !expanded;
+            hiddenRows.forEach(function(row) {
+                row.style.display = expanded ? '' : 'none';
+            });
+            syncToggleLabel();
+        });
+
+        syncToggleLabel();
+        wrap.appendChild(toggle);
     }
     return wrap;
 }
@@ -595,17 +620,46 @@ function buildIntradayEvent(evt) {
     row.appendChild(_el('div', 'mod-event-time', timeText));
 
     var detail = _el('div', 'mod-event-detail');
-    detail.appendChild(_el('span', 'mod-event-modulation', evt.label));
-    detail.appendChild(_el(
-        'span',
-        'mod-event-duration',
-        evt.point_in_time
-            ? (T['docsight.modulation.brief_dip'] || 'brief dip')
-            : evt.hours.toFixed(1) + 'h'
-    ));
+    detail.appendChild(_el('div', 'mod-event-modulation', evt.label));
+    detail.appendChild(_el('div', 'mod-event-duration', formatIntradayEventDuration(evt)));
     row.appendChild(detail);
-    row.appendChild(_el('div', 'mod-event-share', evt.pct + '%'));
+
+    var impact = _el('div', 'mod-event-impact');
+    impact.appendChild(_el('strong', 'mod-event-share', evt.pct + '%'));
+    impact.appendChild(_el('span', 'mod-event-share-label',
+        T['docsight.modulation.of_samples'] || 'of samples'));
+    row.appendChild(impact);
     return row;
+}
+
+function formatIntradayEventDuration(evt) {
+    if (evt.point_in_time) {
+        if (evt.count && evt.count > 1) {
+            return evt.count + ' ' + sampleUnit(evt.count);
+        }
+        return T['docsight.modulation.brief_dip'] || 'brief dip';
+    }
+
+    var minutes = evt.duration_minutes || 0;
+    if (minutes <= 0) {
+        return evt.count + ' ' + sampleUnit(evt.count);
+    }
+    if (minutes < 60) {
+        return minutes + ' min';
+    }
+
+    var hours = Math.floor(minutes / 60);
+    var remainder = minutes % 60;
+    if (remainder === 0) {
+        return hours + 'h';
+    }
+    return hours + 'h ' + remainder + 'm';
+}
+
+function sampleUnit(count) {
+    return count === 1
+        ? (T['docsight.modulation.sample_singular'] || 'sample')
+        : (T['docsight.modulation.sample_plural'] || 'samples');
 }
 
 function renderChannelTimeline(canvasId, timeline) {

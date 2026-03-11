@@ -6,6 +6,7 @@ multi-day overview distribution, and intraday per-channel timeline.
 
 import math
 import re
+from datetime import datetime
 from collections import defaultdict
 
 
@@ -67,6 +68,11 @@ def _canonical_label(modulation_str):
         return (raw, None)
 
     return ("Unknown", None)
+
+
+def _channel_modulation(ch):
+    """Return the modulation value to use for modulation analytics."""
+    return ch.get("profile_modulation") or ch.get("modulation") or ch.get("type") or ""
 
 
 # ── Health index (per-protocol-group) ────────────────────────────────
@@ -268,7 +274,7 @@ def _build_protocol_group(version, direction, by_date, sorted_dates, threshold):
             day_sample_count += 1
             for ch in group_channels:
                 channel_ids.add(ch.get("channel_id"))
-                mod_str = ch.get("modulation") or ch.get("type") or ""
+                mod_str = _channel_modulation(ch)
                 label, qam = _canonical_label(mod_str)
                 day_observations.append((label, qam))
 
@@ -332,7 +338,7 @@ def _count_degraded_channels_day(snapshot_groups, version, direction, threshold)
         for ch in channels:
             if ch.get("docsis_version", "3.0") != version:
                 continue
-            mod_str = ch.get("modulation") or ch.get("type") or ""
+            mod_str = _channel_modulation(ch)
             _, qam = _canonical_label(mod_str)
             if qam is not None and qam <= threshold:
                 degraded.add(ch.get("channel_id"))
@@ -347,7 +353,7 @@ def _count_degraded_channels_overall(by_date, sorted_dates, version, direction, 
             for ch in channels:
                 if ch.get("docsis_version", "3.0") != version:
                     continue
-                mod_str = ch.get("modulation") or ch.get("type") or ""
+                mod_str = _channel_modulation(ch)
                 _, qam = _canonical_label(mod_str)
                 if qam is not None and qam <= threshold:
                     degraded.add(ch.get("channel_id"))
@@ -400,7 +406,7 @@ def compute_intraday(snapshots, direction, tz_name, date_str, low_qam_threshold=
                     "frequency": ch.get("frequency", ""),
                     "timeline": [],
                 }
-            mod_str = ch.get("modulation") or ch.get("type") or ""
+            mod_str = _channel_modulation(ch)
             label, qam = _canonical_label(mod_str)
             channel_data[cid]["timeline"].append((local_time, label, qam))
 
@@ -536,6 +542,20 @@ def _channel_summary(periods, max_qam, threshold=16):
     return "; ".join(parts)
 
 
+def _event_duration_minutes(start, end):
+    """Return the observed clock duration between two HH:MM timestamps."""
+    try:
+        start_dt = datetime.strptime(start, "%H:%M")
+        end_dt = datetime.strptime(end, "%H:%M")
+    except (TypeError, ValueError):
+        return 0
+
+    minutes = int((end_dt - start_dt).total_seconds() // 60)
+    if minutes < 0:
+        minutes += 24 * 60
+    return minutes
+
+
 def _build_degraded_events(periods, threshold=16):
     """Return structured degraded periods for UI rendering."""
     degraded_periods = [
@@ -548,6 +568,7 @@ def _build_degraded_events(periods, threshold=16):
     events = []
     for start, end, label, qam, count in degraded_periods:
         pct = round(count / total_obs * 100) if total_obs > 0 else 0
+        duration_minutes = _event_duration_minutes(start, end)
         hours = round(count * 0.25, 1)
         events.append({
             "start": start,
@@ -556,6 +577,7 @@ def _build_degraded_events(periods, threshold=16):
             "qam": qam,
             "count": count,
             "hours": hours,
+            "duration_minutes": duration_minutes,
             "pct": pct,
             "point_in_time": start == end,
         })

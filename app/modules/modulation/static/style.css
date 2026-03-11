@@ -180,12 +180,13 @@
 
 .mod-event-row {
     display: grid;
-    grid-template-columns: minmax(96px, auto) 1fr auto;
+    grid-template-columns: minmax(112px, auto) minmax(0, 1fr) minmax(76px, auto);
     gap: 10px;
     align-items: center;
     padding: 10px 12px;
     border-radius: var(--radius, 8px);
     background: var(--surface-2, rgba(255,255,255,0.03));
+    border: 1px solid rgba(255,255,255,0.04);
 }
 
 .mod-event-time {
@@ -196,10 +197,8 @@
 
 .mod-event-detail {
     min-width: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
+    display: grid;
+    gap: 2px;
 }
 
 .mod-event-modulation {
@@ -209,19 +208,41 @@
 }
 
 .mod-event-duration,
-.mod-event-share,
-.mod-event-more {
+.mod-event-more,
+.mod-event-share-label {
     font-size: 0.8em;
     color: var(--text-secondary, var(--muted));
 }
 
+.mod-event-impact {
+    display: grid;
+    justify-items: end;
+    gap: 2px;
+}
+
 .mod-event-share {
+    font-size: 0.95em;
+    font-weight: 700;
+    color: var(--text-primary, #fff);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
 
-.mod-event-more {
-    padding: 0 2px;
+.mod-event-toggle {
+    justify-self: start;
+    margin-top: 2px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text-secondary, var(--muted));
+    font-size: 0.8em;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.mod-event-toggle:hover,
+.mod-event-toggle.open {
+    color: var(--text-primary, #fff);
 }
 
 .modulation-intraday-chart-wrap {
@@ -301,5 +322,8 @@
     .mod-event-time,
     .mod-event-share {
         white-space: normal;
+    }
+    .mod-event-impact {
+        justify-items: start;
     }
 }

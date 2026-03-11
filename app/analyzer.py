@@ -316,7 +316,7 @@ def _assess_us_channel(ch, docsis_ver="3.0"):
     raw_power = ch.get("powerLevel")
 
     modulation = ch.get("modulation") or ch.get("type") or ""
-    channel_type = modulation.upper().replace("-", "").strip()
+    channel_type = (ch.get("type") or modulation).upper().replace("-", "").strip()
 
     if raw_power is not None:
         power = _parse_float(raw_power)
@@ -380,7 +380,7 @@ def analyze(data: dict) -> dict:
         snr = abs(_parse_float(ch.get("mse"))) if ch.get("mse") else None
         health, health_detail = _assess_ds_channel(ch, "3.0")
         metric_h = _metric_healths(health_detail.split(" + ") if health_detail else [])
-        ds_channels.append({
+        channel = {
             "channel_id": ch.get("channelID", 0),
             "frequency": ch.get("frequency", ""),
             "power": power,
@@ -392,14 +392,17 @@ def analyze(data: dict) -> dict:
             "health": health,
             "health_detail": health_detail,
             **metric_h,
-        })
+        }
+        if ch.get("profile_modulation"):
+            channel["profile_modulation"] = ch["profile_modulation"]
+        ds_channels.append(channel)
     for ch in ds31:
         raw_power = ch.get("powerLevel")
         power = _parse_float(raw_power) if raw_power is not None else None
         snr = _parse_float(ch.get("mer")) if ch.get("mer") else None
         health, health_detail = _assess_ds_channel(ch, "3.1")
         metric_h = _metric_healths(health_detail.split(" + ") if health_detail else [])
-        ds_channels.append({
+        channel = {
             "channel_id": ch.get("channelID", 0),
             "frequency": ch.get("frequency", ""),
             "power": power,
@@ -411,7 +414,10 @@ def analyze(data: dict) -> dict:
             "health": health,
             "health_detail": health_detail,
             **metric_h,
-        })
+        }
+        if ch.get("profile_modulation"):
+            channel["profile_modulation"] = ch["profile_modulation"]
+        ds_channels.append(channel)
 
     ds_channels.sort(key=lambda c: c["channel_id"])
 
@@ -422,7 +428,7 @@ def analyze(data: dict) -> dict:
         metric_h = _metric_healths(health_detail.split(" + ") if health_detail else [])
         mod = ch.get("modulation") or ch.get("type", "")
         bitrate = _channel_bitrate_mbps(mod, ch.get("symbolRate"))
-        us_channels.append({
+        channel = {
             "channel_id": ch.get("channelID", 0),
             "frequency": ch.get("frequency", ""),
             "power": _parse_float(ch.get("powerLevel")),
@@ -433,14 +439,17 @@ def analyze(data: dict) -> dict:
             "health_detail": health_detail,
             "theoretical_bitrate": bitrate,
             **metric_h,
-        })
+        }
+        if ch.get("profile_modulation"):
+            channel["profile_modulation"] = ch["profile_modulation"]
+        us_channels.append(channel)
     for ch in us31:
         health, health_detail = _assess_us_channel(ch, "3.1")
         metric_h = _metric_healths(health_detail.split(" + ") if health_detail else [])
         mod = ch.get("modulation") or ch.get("type", "")
         bitrate = _channel_bitrate_mbps(mod, ch.get("symbolRate"))
         raw_power = ch.get("powerLevel")
-        us_channels.append({
+        channel = {
             "channel_id": ch.get("channelID", 0),
             "frequency": ch.get("frequency", ""),
             "power": _parse_float(raw_power) if raw_power is not None else None,
@@ -451,7 +460,10 @@ def analyze(data: dict) -> dict:
             "health_detail": health_detail,
             "theoretical_bitrate": bitrate,
             **metric_h,
-        })
+        }
+        if ch.get("profile_modulation"):
+            channel["profile_modulation"] = ch["profile_modulation"]
+        us_channels.append(channel)
 
     us_channels.sort(key=lambda c: c["channel_id"])
 

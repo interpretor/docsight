@@ -37,6 +37,8 @@
       {"channelID": 3, "frequency": "37.200", "powerLevel": 45.0, "modulation": "64QAM", "multiplex": "SC-QAM", "type": "64QAM"},
       {"channelID": 4, "frequency": "30.800", "powerLevel": 45.5, "modulation": "64QAM", "multiplex": "SC-QAM", "type": "64QAM"}
     ],
-    "docsis31": []
+    "docsis31": [
+      {"channelID": 5, "frequency": "18.000 - 44.000", "powerLevel": 45.0, "modulation": "OFDMA", "profile_modulation": "1024QAM", "multiplex": "OFDMA", "type": "OFDMA"}
+    ]
   }
 }

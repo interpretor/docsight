@@ -5,6 +5,8 @@ import sqlite3
 import pytest
 from unittest.mock import MagicMock, patch
 
+import app.analyzer as analyzer
+from app.collectors.demo import DemoCollector
 from app.storage import SnapshotStorage
 from app.modules.speedtest.storage import SpeedtestStorage
 from app.modules.bqm.storage import BqmStorage
@@ -258,6 +260,103 @@ class TestDoubleSeedIdempotency:
         count_after = _count_rows(storage, "journal_entries", is_demo=1)
 
         assert count_after == count_before
+
+
+class TestDemoCollectorOFDMA:
+    def _collector(self, storage):
+        return DemoCollector(
+            analyzer_fn=analyzer.analyze,
+            event_detector=MagicMock(),
+            storage=storage,
+            mqtt_pub=None,
+            web=MagicMock(),
+            poll_interval=300,
+        )
+
+    def test_generate_data_includes_docsis31_upstream_ofdma(self, storage):
+        collector = self._collector(storage)
+        collector._poll_count = 1
+
+        data = collector._generate_data()
+
+        assert len(data["channelUs"]["docsis31"]) == 1
+        ch = data["channelUs"]["docsis31"][0]
+        assert ch["type"] == "OFDMA"
+        assert ch["modulation"] == "OFDMA"
+        assert ch["profile_modulation"] == "256QAM"
+        assert ch["powerLevel"] < 44.1
+
+    def test_historical_bad_period_makes_ofdma_problematic(self, storage):
+        collector = self._collector(storage)
+
+        analysis = collector._generate_historical_analysis(
+            index=0,
+            diurnal=0,
+            seasonal=0,
+            bad_period=True,
+            hour=4,
+            day_of_year=10,
+        )
+
+        ofdma = next(ch for ch in analysis["us_channels"] if ch["docsis_version"] == "3.1")
+        assert analysis["summary"]["us_total"] == 5
+        assert ofdma["modulation"] == "OFDMA"
+        assert ofdma["profile_modulation"] == "128QAM"
+        assert ofdma["health"] != "good"
+        assert "power" in ofdma["health_detail"]
+
+    def test_historical_normal_period_keeps_ofdma_healthy(self, storage):
+        collector = self._collector(storage)
+
+        analysis = collector._generate_historical_analysis(
+            index=0,
+            diurnal=0,
+            seasonal=0,
+            bad_period=False,
+            hour=12,
+            day_of_year=11,
+        )
+
+        ofdma = next(ch for ch in analysis["us_channels"] if ch["docsis_version"] == "3.1")
+        assert ofdma["modulation"] == "OFDMA"
+        assert ofdma["profile_modulation"] == "1024QAM"
+        assert ofdma["health"] == "good"
+
+    def test_historical_ofdma_profile_varies_by_time_of_day(self, storage):
+        collector = self._collector(storage)
+
+        early = collector._generate_historical_analysis(
+            index=0,
+            diurnal=0,
+            seasonal=0,
+            bad_period=False,
+            hour=2,
+            day_of_year=11,
+        )
+        midday = collector._generate_historical_analysis(
+            index=0,
+            diurnal=0,
+            seasonal=0,
+            bad_period=False,
+            hour=12,
+            day_of_year=11,
+        )
+        evening = collector._generate_historical_analysis(
+            index=0,
+            diurnal=0,
+            seasonal=0,
+            bad_period=False,
+            hour=20,
+            day_of_year=11,
+        )
+
+        early_ofdma = next(ch for ch in early["us_channels"] if ch["docsis_version"] == "3.1")
+        midday_ofdma = next(ch for ch in midday["us_channels"] if ch["docsis_version"] == "3.1")
+        evening_ofdma = next(ch for ch in evening["us_channels"] if ch["docsis_version"] == "3.1")
+
+        assert early_ofdma["profile_modulation"] == "512QAM"
+        assert midday_ofdma["profile_modulation"] == "1024QAM"
+        assert evening_ofdma["profile_modulation"] == "512QAM"
 
 
 # ── Migration Endpoint Tests ──

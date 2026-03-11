@@ -16,6 +16,7 @@ from app.modules.modulation.engine import (
     _modulation_periods,
     _simplify_timeline,
     _channel_summary,
+    _build_degraded_events,
     compute_distribution,
     compute_distribution_v2,
     compute_intraday,
@@ -404,6 +405,29 @@ class TestChannelSummary:
 
 # ── compute_distribution_v2 ──
 
+class TestBuildDegradedEvents:
+    def test_uses_clock_duration_for_multi_sample_window(self):
+        periods = [
+            ("01:06", "01:11", "16QAM", 16, 2),
+            ("01:16", "01:26", "64QAM", 64, 4),
+        ]
+        events = _build_degraded_events(periods, 16)
+        assert len(events) == 1
+        assert events[0]["duration_minutes"] == 5
+        assert events[0]["pct"] == 33
+        assert events[0]["point_in_time"] is False
+
+    def test_single_observation_stays_point_in_time(self):
+        periods = [
+            ("03:07", "03:07", "16QAM", 16, 1),
+            ("03:12", "03:22", "64QAM", 64, 3),
+        ]
+        events = _build_degraded_events(periods, 16)
+        assert len(events) == 1
+        assert events[0]["duration_minutes"] == 0
+        assert events[0]["point_in_time"] is True
+
+
 def _make_snapshot(timestamp, us_channels=None, ds_channels=None):
     return {
         "timestamp": timestamp,
@@ -492,6 +516,25 @@ class TestComputeDistributionV2:
         pg = result["protocol_groups"][0]
         assert pg["low_qam_pct"] == 33.3
         assert pg["days"][0]["low_qam_pct"] == 33.3
+
+    def test_prefers_profile_modulation_for_ofdma_distribution(self):
+        snaps = [
+            _make_snapshot(
+                "2026-03-01T10:00:00Z",
+                us_channels=[{
+                    "channel_id": 41,
+                    "modulation": "OFDMA",
+                    "profile_modulation": "128QAM",
+                    "docsis_version": "3.1",
+                }],
+            )
+        ]
+        result = compute_distribution_v2(snaps, "us", "UTC")
+        pg = result["protocol_groups"][0]
+        assert pg["docsis_version"] == "3.1"
+        assert pg["dominant_modulation"] == "128QAM"
+        assert pg["degraded_channel_count"] == 1
+        assert pg["distribution"]["128QAM"] == 100.0
 
     def test_per_day_data(self):
         snaps = [
@@ -685,6 +728,30 @@ class TestComputeIntraday:
         assert ch["degraded_sample_pct"] == 33
         assert len(ch["degraded_events"]) == 1
         assert ch["degraded_events"][0]["label"] == "128QAM"
+        assert ch["degraded_events"][0]["duration_minutes"] == 0
+
+    def test_intraday_prefers_profile_modulation_for_ofdma(self):
+        snaps = [
+            _make_snapshot("2026-03-01T10:00:00Z",
+                           us_channels=[{"channel_id": 41, "modulation": "OFDMA", "profile_modulation": "1024QAM",
+                                         "docsis_version": "3.1", "frequency": "29.775 - 64.775"}]),
+            _make_snapshot("2026-03-01T14:00:00Z",
+                           us_channels=[{"channel_id": 41, "modulation": "OFDMA", "profile_modulation": "128QAM",
+                                         "docsis_version": "3.1", "frequency": "29.775 - 64.775"}]),
+            _make_snapshot("2026-03-01T18:00:00Z",
+                           us_channels=[{"channel_id": 41, "modulation": "OFDMA", "profile_modulation": "512QAM",
+                                         "docsis_version": "3.1", "frequency": "29.775 - 64.775"}]),
+        ]
+        result = compute_intraday(snaps, "us", "UTC", "2026-03-01")
+        pg = next(pg for pg in result["protocol_groups"] if pg["docsis_version"] == "3.1")
+        ch = pg["channels"][0]
+        assert ch["degraded"] is True
+        assert ch["worst_modulation"] == "128QAM"
+        assert ch["timeline"] == [
+            {"time": "10:00", "modulation": "1024QAM"},
+            {"time": "14:00", "modulation": "128QAM"},
+            {"time": "18:00", "modulation": "512QAM"},
+        ]
 
 
 # ── Legacy compute_distribution (v1 compat) ──
