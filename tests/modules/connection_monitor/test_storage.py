@@ -102,7 +102,6 @@ class TestSamples:
         result = storage.get_samples(tid, limit=0)
         assert len(result) == 20
 
-
 class TestRetention:
     def test_cleanup_old_samples(self, storage):
         tid = storage.create_target("Test", "1.1.1.1")
@@ -168,6 +167,24 @@ class TestSummary:
         assert abs(summary["packet_loss_pct"] - 33.33) < 1
         assert summary["min_latency_ms"] == 10.0
         assert summary["max_latency_ms"] == 20.0
+
+    def test_range_stats_returns_exact_metrics(self, storage):
+        tid = storage.create_target("Test", "1.1.1.1")
+        now = time.time()
+        storage.save_samples([
+            {"target_id": tid, "timestamp": now - 40, "latency_ms": 10.0, "timeout": False, "probe_method": "tcp"},
+            {"target_id": tid, "timestamp": now - 30, "latency_ms": 20.0, "timeout": False, "probe_method": "tcp"},
+            {"target_id": tid, "timestamp": now - 20, "latency_ms": 30.0, "timeout": False, "probe_method": "tcp"},
+            {"target_id": tid, "timestamp": now - 10, "latency_ms": None, "timeout": True, "probe_method": "tcp"},
+        ])
+        stats = storage.get_range_stats(tid, start=now - 60, end=now)
+        assert stats["sample_count"] == 4
+        assert stats["latency_count"] == 3
+        assert stats["avg_latency_ms"] == 20.0
+        assert stats["min_latency_ms"] == 10.0
+        assert stats["max_latency_ms"] == 30.0
+        assert stats["p95_latency_ms"] == 30.0
+        assert abs(stats["packet_loss_pct"] - 25.0) < 0.01
 
 
 class TestOutages:
