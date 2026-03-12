@@ -6,20 +6,20 @@ const cheerio = require('cheerio');
 // Disable SSL verification for self-signed modem certs
 const agent = new https.Agent({ rejectUnauthorized: false });
 
-function request(url, options = {}) {
-  return new Promise((resolve, reject) => {
-    const parsed = new URL(url);
-    const mod = parsed.protocol === 'https:' ? https : http;
-    const reqOpts = {
-      hostname: parsed.hostname,
-      port: parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
-      path: parsed.pathname + parsed.search,
-      method: options.method || 'GET',
-      headers: options.headers || {},
-      timeout: 30000,
-      agent: parsed.protocol === 'https:' ? agent : undefined,
-    };
+async function request(url, options = {}) {
+  const parsed = new URL(url);
+  const mod = parsed.protocol === 'https:' ? https : http;
+  const reqOpts = {
+    hostname: parsed.hostname,
+    port: parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
+    path: parsed.pathname + parsed.search,
+    method: options.method || 'GET',
+    headers: options.headers || {},
+    timeout: 30000,
+    agent: parsed.protocol === 'https:' ? agent : undefined,
+  };
 
+  return new Promise((resolve, reject) => {
     const req = mod.request(reqOpts, (res) => {
       let body = '';
       res.on('data', (chunk) => { body += chunk; });

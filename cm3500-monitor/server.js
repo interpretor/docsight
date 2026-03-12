@@ -7,7 +7,7 @@ const config = {
   modemUrl: process.env.MODEM_URL || 'https://192.168.100.1',
   modemUser: process.env.MODEM_USER || 'admin',
   modemPassword: process.env.MODEM_PASSWORD || 'password',
-  pollInterval: parseInt(process.env.POLL_INTERVAL || '300', 10) * 1000,
+  pollInterval: parseInt(process.env.POLL_INTERVAL || '60', 10) * 1000,
   port: parseInt(process.env.PORT || '3000', 10),
   dbPath: process.env.DB_PATH || path.join(__dirname, 'data.db'),
 };
