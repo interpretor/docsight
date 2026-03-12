@@ -1,0 +1,15 @@
+{
+  "name": "cm3500-monitor",
+  "version": "1.0.0",
+  "description": "Arris CM3500B cable modem monitor with web dashboard",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.0.0",
+    "cheerio": "^1.0.0",
+    "express": "^4.21.0"
+  }
+}
