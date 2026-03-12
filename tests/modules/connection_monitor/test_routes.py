@@ -165,6 +165,8 @@ class TestSamplesResolution:
         assert data["meta"]["resolution"] == "raw"
         assert data["meta"]["bucket_seconds"] is None
         assert data["meta"]["blended"] is False
+        assert data["meta"]["mixed"] is False
+        assert data["meta"]["tiers_used"] == ["raw"]
         s = data["samples"][0]
         assert "latency_ms" in s
         assert "packet_loss_pct" in s
@@ -235,6 +237,8 @@ class TestSamplesResolution:
         resp = c.get(f"/api/connection-monitor/samples/{tid}?start={start}&end={end}")
         data = resp.get_json()
         assert data["meta"]["blended"] is True
+        assert data["meta"]["mixed"] is True
+        assert data["meta"]["tiers_used"] == ["raw", "1min"]
         assert len(data["samples"]) == 2
         assert data["samples"][0]["timestamp"] < data["samples"][1]["timestamp"]
         assert data["samples"][0]["min_latency_ms"] is not None
@@ -252,6 +256,8 @@ class TestSamplesResolution:
         data = resp.get_json()
         assert data["meta"]["resolution"] == "5min"
         assert data["meta"]["blended"] is True
+        assert data["meta"]["mixed"] is False
+        assert data["meta"]["tiers_used"] == ["raw"]
         assert len(data["samples"]) == 1
         assert data["samples"][0]["latency_ms"] == 10.0
         assert data["samples"][0]["min_latency_ms"] is None
@@ -285,6 +291,8 @@ class TestSamplesResolution:
         data = resp.get_json()
         assert data["meta"]["resolution"] == "5min"
         assert data["meta"]["blended"] is True
+        assert data["meta"]["mixed"] is True
+        assert data["meta"]["tiers_used"] == ["raw", "1min", "5min"]
         assert len(data["samples"]) == 3
         assert data["samples"][0]["timestamp"] < data["samples"][1]["timestamp"] < data["samples"][2]["timestamp"]
         assert data["samples"][0]["min_latency_ms"] is not None
@@ -312,9 +320,57 @@ class TestSamplesResolution:
         data = resp.get_json()
         assert data["meta"]["resolution"] == "raw"
         assert data["meta"]["blended"] is False
+        assert data["meta"]["mixed"] is False
+        assert data["meta"]["tiers_used"] == ["raw"]
         assert len(data["samples"]) == 1
         assert data["samples"][0]["latency_ms"] == 10.0
         assert data["samples"][0]["min_latency_ms"] is None
+
+    def test_auto_range_uses_exclusive_tier_boundaries(self, client):
+        """Tier boundaries should keep near-cutoff samples in exactly one tier."""
+        c, storage = client
+        tid = storage.create_target("Test", "1.1.1.1")
+        now = time.time()
+        raw_ts = now - 7 * 86400 + 5
+        agg60_near_raw_ts = now - 7 * 86400 - 5
+        agg60_near_300_ts = now - 30 * 86400 + 5
+        agg300_ts = now - 30 * 86400 - 5
+        storage.save_samples([
+            {"target_id": tid, "timestamp": raw_ts, "latency_ms": 10.0, "timeout": False, "probe_method": "tcp"},
+        ])
+        with storage._connect() as conn:
+            conn.execute(
+                """INSERT INTO connection_samples_aggregated
+                   (target_id, bucket_start, bucket_seconds,
+                    avg_latency_ms, min_latency_ms, max_latency_ms,
+                    p95_latency_ms, packet_loss_pct, sample_count)
+                   VALUES (?, ?, 60, 15.0, 10.0, 20.0, 18.0, 0.0, 12)""",
+                (tid, agg60_near_raw_ts),
+            )
+            conn.execute(
+                """INSERT INTO connection_samples_aggregated
+                   (target_id, bucket_start, bucket_seconds,
+                    avg_latency_ms, min_latency_ms, max_latency_ms,
+                    p95_latency_ms, packet_loss_pct, sample_count)
+                   VALUES (?, ?, 60, 17.0, 12.0, 22.0, 19.0, 0.0, 12)""",
+                (tid, agg60_near_300_ts),
+            )
+            conn.execute(
+                """INSERT INTO connection_samples_aggregated
+                   (target_id, bucket_start, bucket_seconds,
+                    avg_latency_ms, min_latency_ms, max_latency_ms,
+                    p95_latency_ms, packet_loss_pct, sample_count)
+                   VALUES (?, ?, 300, 25.0, 20.0, 30.0, 28.0, 1.0, 60)""",
+                (tid, agg300_ts),
+            )
+        resp = c.get(f"/api/connection-monitor/samples/{tid}?start={now - 90 * 86400}&end={now}")
+        data = resp.get_json()
+        timestamps = [sample["timestamp"] for sample in data["samples"]]
+        assert len(data["samples"]) == 4
+        assert timestamps.count(raw_ts) == 1
+        assert timestamps.count(agg60_near_raw_ts) == 1
+        assert timestamps.count(agg60_near_300_ts) == 1
+        assert timestamps.count(agg300_ts) == 1
 
     def test_get_samples_with_max_points(self, client):
         c, storage = client
