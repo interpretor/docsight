@@ -63,28 +63,48 @@ const DASHBOARD_HTML = `<!DOCTYPE html>
 <title>CM3500B Monitor</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace; background: #0f1117; color: #e0e0e0; padding: 16px; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace; background: #f5f6f8; color: #1a1a1a; padding: 16px; }
   h1 { font-size: 1.3rem; margin-bottom: 4px; }
-  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #2a2d35; }
-  .device-info { display: flex; gap: 16px; font-size: 0.85rem; color: #888; }
-  .device-info span { background: #1a1d25; padding: 4px 10px; border-radius: 4px; }
-  .status-ok { color: #4ade80; }
-  .status-warn { color: #fbbf24; }
-  .status-err { color: #f87171; }
-  .updated { font-size: 0.8rem; color: #555; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #ddd; }
+  .device-info { display: flex; gap: 16px; font-size: 0.85rem; color: #666; }
+  .device-info span { background: #e8eaed; padding: 4px 10px; border-radius: 4px; }
+  .status-ok { color: #16a34a; }
+  .status-warn { color: #ca8a04; }
+  .status-err { color: #dc2626; }
+  .updated { font-size: 0.8rem; color: #888; }
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
-  .card { background: #1a1d25; border-radius: 8px; padding: 14px; overflow-x: auto; }
-  .card h2 { font-size: 0.95rem; margin-bottom: 10px; color: #a5b4fc; }
+  .card { background: #fff; border-radius: 8px; padding: 14px; overflow-x: auto; border: 1px solid #e0e0e0; }
+  .card h2 { font-size: 0.95rem; margin-bottom: 10px; color: #4f46e5; }
   table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-  th { text-align: left; padding: 6px 8px; border-bottom: 1px solid #2a2d35; color: #888; font-weight: 500; }
-  td { padding: 5px 8px; border-bottom: 1px solid #1f222b; }
-  tr:hover td { background: #22252e; }
-  .good { color: #4ade80; }
-  .warn { color: #fbbf24; }
-  .bad { color: #f87171; }
+  th { text-align: left; padding: 6px 8px; border-bottom: 1px solid #ddd; color: #666; font-weight: 500; }
+  td { padding: 5px 8px; border-bottom: 1px solid #f0f0f0; }
+  tr:hover td { background: #f8f9fa; }
+  .good { color: #16a34a; }
+  .warn { color: #ca8a04; }
+  .bad { color: #dc2626; }
   .error-count { font-weight: bold; }
-  .no-data { color: #555; padding: 20px; text-align: center; }
+  .no-data { color: #999; padding: 20px; text-align: center; }
+
+  @media (prefers-color-scheme: dark) {
+    body { background: #0f1117; color: #e0e0e0; }
+    .header { border-bottom-color: #2a2d35; }
+    .device-info { color: #888; }
+    .device-info span { background: #1a1d25; }
+    .status-ok { color: #4ade80; }
+    .status-warn { color: #fbbf24; }
+    .status-err { color: #f87171; }
+    .updated { color: #555; }
+    .card { background: #1a1d25; border-color: #1a1d25; }
+    .card h2 { color: #a5b4fc; }
+    th { border-bottom-color: #2a2d35; color: #888; }
+    td { border-bottom-color: #1f222b; }
+    tr:hover td { background: #22252e; }
+    .good { color: #4ade80; }
+    .warn { color: #fbbf24; }
+    .bad { color: #f87171; }
+    .no-data { color: #555; }
+  }
 </style>
 </head>
 <body>
