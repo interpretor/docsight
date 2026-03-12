@@ -73,8 +73,13 @@
         var btn = document.createElement('button');
         btn.id = 'cm-pin-day-btn';
         btn.className = 'trend-tab';
-        btn.style.cssText = 'font-size:0.75rem;padding:4px 10px;margin-left:4px;';
-        btn.textContent = '\uD83D\uDCCC Pin this day';
+        btn.style.cssText = 'font-size:0.75rem;padding:4px 10px;margin-left:4px;display:inline-flex;align-items:center;gap:4px;';
+        var pinIcon = document.createElement('i');
+        pinIcon.setAttribute('data-lucide', 'pin');
+        pinIcon.style.cssText = 'width:12px;height:12px;';
+        btn.appendChild(pinIcon);
+        btn.appendChild(document.createTextNode('Pin this day'));
+        if (window.lucide) lucide.createIcons({nameAttr: 'data-lucide', nodes: [btn]});
         btn.onclick = function() {
             var ts = Math.floor(Date.now() / 1000);
             fetch('/api/connection-monitor/pinned-days', {
