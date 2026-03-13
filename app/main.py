@@ -76,7 +76,7 @@ def polling_loop(config_mgr, storage, stop_event):
     if mqtt_cls and config_mgr.is_mqtt_configured():
         mqtt_user = config["mqtt_user"] or None
         mqtt_password = config["mqtt_password"] or None
-        mqtt_tls_insecure = (config["mqtt_tls_insecure"] or "").strip().lower() == "true"
+        mqtt_tls_insecure = str(config.get("mqtt_tls_insecure", "")).strip().lower() in ("true", "1", "yes", "on")
         mqtt_pub = mqtt_cls(
             host=config["mqtt_host"],
             port=int(config["mqtt_port"]),
