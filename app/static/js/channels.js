@@ -218,6 +218,7 @@ function loadChannelTimeline() {
         loadingEl.style.display = 'none';
         emptyEl.textContent = T.channel_select_prompt || 'Select a channel above to view its signal history.';
         emptyEl.style.display = '';
+        writeChannelHash();
         return;
     }
     var parts = val.split('-');
