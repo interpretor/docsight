@@ -3,36 +3,6 @@ const path = require('path');
 const { initDb, insertSnapshot, getLatest, getHistory, pruneOld } = require('./db');
 const { scrapeModem } = require('./scraper');
 
-const config = {
-  modemUrl: process.env.MODEM_URL || 'https://192.168.100.1',
-  modemUser: process.env.MODEM_USER || 'admin',
-  modemPassword: process.env.MODEM_PASSWORD || 'password',
-  pollInterval: parseInt(process.env.POLL_INTERVAL || '60', 10) * 1000,
-  port: parseInt(process.env.PORT || '3000', 10),
-  dbPath: process.env.DB_PATH || path.join(__dirname, 'data.db'),
-};
-
-const db = initDb(config.dbPath);
-const app = express();
-
-// --- Poll loop ---
-async function poll() {
-  try {
-    console.log('[poll] Scraping modem...');
-    const data = await scrapeModem(config);
-    insertSnapshot(db, data);
-    console.log('[poll] Snapshot saved (%d DS, %d US channels)',
-      data.downstream.qam.length + data.downstream.ofdm.length,
-      data.upstream.qam.length + data.upstream.ofdm.length);
-    pruneOld(db, 7);
-  } catch (err) {
-    console.error('[poll] Scrape failed:', err.message);
-  }
-}
-
-setInterval(poll, config.pollInterval);
-poll();
-
 // --- Prometheus formatter ---
 function formatPrometheus(data) {
   const lines = [];
@@ -127,33 +97,72 @@ function formatPrometheus(data) {
   return lines.join('\n') + '\n';
 }
 
-// --- API ---
-app.get('/metrics', (req, res) => {
-  const snapshot = getLatest(db);
-  if (!snapshot) return res.status(503).type('text/plain').send('# No data yet\n');
-  res.type('text/plain; version=0.0.4; charset=utf-8').send(formatPrometheus(snapshot.data));
-});
+// --- App factory ---
+function createApp(db) {
+  const app = express();
 
-app.get('/api/latest', (req, res) => {
-  const snapshot = getLatest(db);
-  if (!snapshot) return res.status(503).json({ error: 'No data yet' });
-  res.json(snapshot);
-});
+  app.get('/metrics', (req, res) => {
+    const snapshot = getLatest(db);
+    if (!snapshot) return res.status(503).type('text/plain').send('# No data yet\n');
+    res.type('text/plain; version=0.0.4; charset=utf-8').send(formatPrometheus(snapshot.data));
+  });
 
-app.get('/api/history', (req, res) => {
-  const hours = parseInt(req.query.hours || '24', 10);
-  res.json(getHistory(db, hours));
-});
+  app.get('/api/latest', (req, res) => {
+    const snapshot = getLatest(db);
+    if (!snapshot) return res.status(503).json({ error: 'No data yet' });
+    res.json(snapshot);
+  });
 
-// --- Dashboard ---
-app.get('/', (req, res) => {
-  res.type('html').send(DASHBOARD_HTML);
-});
+  app.get('/api/history', (req, res) => {
+    const hours = parseInt(req.query.hours || '24', 10);
+    res.json(getHistory(db, hours));
+  });
 
-app.listen(config.port, () => {
-  console.log(`[server] CM3500 Monitor listening on http://localhost:${config.port}`);
-  console.log(`[server] Modem: ${config.modemUrl} (poll every ${config.pollInterval / 1000}s)`);
-});
+  app.get('/', (req, res) => {
+    res.type('html').send(DASHBOARD_HTML);
+  });
+
+  return app;
+}
+
+// --- Start server when run directly ---
+if (require.main === module) {
+  const config = {
+    modemUrl: process.env.MODEM_URL || 'https://192.168.100.1',
+    modemUser: process.env.MODEM_USER || 'admin',
+    modemPassword: process.env.MODEM_PASSWORD || 'password',
+    pollInterval: parseInt(process.env.POLL_INTERVAL || '60', 10) * 1000,
+    port: parseInt(process.env.PORT || '3000', 10),
+    dbPath: process.env.DB_PATH || path.join(__dirname, 'data.db'),
+  };
+
+  const db = initDb(config.dbPath);
+  const app = createApp(db);
+
+  async function poll() {
+    try {
+      console.log('[poll] Scraping modem...');
+      const data = await scrapeModem(config);
+      insertSnapshot(db, data);
+      console.log('[poll] Snapshot saved (%d DS, %d US channels)',
+        data.downstream.qam.length + data.downstream.ofdm.length,
+        data.upstream.qam.length + data.upstream.ofdm.length);
+      pruneOld(db, 7);
+    } catch (err) {
+      console.error('[poll] Scrape failed:', err.message);
+    }
+  }
+
+  setInterval(poll, config.pollInterval);
+  poll();
+
+  app.listen(config.port, () => {
+    console.log(`[server] CM3500 Monitor listening on http://localhost:${config.port}`);
+    console.log(`[server] Modem: ${config.modemUrl} (poll every ${config.pollInterval / 1000}s)`);
+  });
+}
+
+module.exports = { createApp, formatPrometheus };
 
 const DASHBOARD_HTML = `<!DOCTYPE html>
 <html lang="en">
