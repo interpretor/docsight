@@ -78,20 +78,25 @@ function initChannelView() {
         switchChannelMode();
 
         if (params.mode === 'timeline') {
-            if (params.days) setPillByValue('channel-time-tabs', params.days);
+            setPillByValue('channel-time-tabs', params.days || '7');
+            var sel = document.getElementById('channel-select');
             if (params.dir && params.channel) {
-                var sel = document.getElementById('channel-select');
                 sel.value = params.dir + '-' + params.channel;
                 if (sel.value === params.dir + '-' + params.channel) {
                     loadChannelTimeline();
                     return;
                 }
             }
+            // Missing or invalid channel → clear selection, show prompt
+            sel.value = '';
+            loadChannelTimeline();
             writeChannelHash();
         } else if (params.mode === 'compare') {
-            if (params.dir) setPillByValue('compare-dir-tabs', params.dir);
+            setPillByValue('compare-dir-tabs', params.dir || 'ds');
             _lastCompareDir = params.dir || 'ds';
-            if (params.days) setPillByValue('compare-time-tabs', params.days);
+            setPillByValue('compare-time-tabs', params.days || '7');
+            _compareChannels = [];
+            _comparePreset = null;
             updateCompareActionLabels();
             if (params.preset === 'all') {
                 addAllCompareChannels();
