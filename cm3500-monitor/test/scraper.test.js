@@ -1,6 +1,6 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { parseStatus } = require('../scraper');
+const { parseStatus } = require('../src/scraper');
 const { STATUS_HTML, STATUS_HTML_WITH_US_OFDM, EMPTY_HTML } = require('./fixtures');
 
 describe('parseStatus', () => {

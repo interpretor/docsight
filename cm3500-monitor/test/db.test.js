@@ -1,6 +1,6 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { initDb, insertSnapshot, getLatest, getHistory, pruneOld } = require('../db');
+const { initDb, insertSnapshot, getLatest, getHistory, pruneOld } = require('../src/db');
 
 function sampleData() {
   return {

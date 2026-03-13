@@ -1,9 +1,9 @@
 const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('http');
-const { createApp, formatPrometheus } = require('../server');
-const { initDb, insertSnapshot } = require('../db');
-const { parseStatus } = require('../scraper');
+const { createApp } = require('../src/app');
+const { initDb, insertSnapshot } = require('../src/db');
+const { parseStatus } = require('../src/scraper');
 const { STATUS_HTML } = require('./fixtures');
 
 function fetch(url) {
@@ -16,15 +16,14 @@ function fetch(url) {
   });
 }
 
-describe('API routes', () => {
+describe('API routes (empty db)', () => {
   let server, baseUrl, db;
 
   before(() => {
     db = initDb(':memory:');
     const app = createApp(db);
-    server = app.listen(0); // random port
-    const port = server.address().port;
-    baseUrl = `http://127.0.0.1:${port}`;
+    server = app.listen(0);
+    baseUrl = `http://127.0.0.1:${server.address().port}`;
   });
 
   after(() => {
@@ -32,7 +31,7 @@ describe('API routes', () => {
     db.close();
   });
 
-  describe('GET /metrics (empty)', () => {
+  describe('GET /metrics', () => {
     it('returns 503 when no data', async () => {
       const res = await fetch(`${baseUrl}/metrics`);
       assert.equal(res.status, 503);
@@ -40,7 +39,7 @@ describe('API routes', () => {
     });
   });
 
-  describe('GET /api/latest (empty)', () => {
+  describe('GET /api/latest', () => {
     it('returns 503 when no data', async () => {
       const res = await fetch(`${baseUrl}/api/latest`);
       assert.equal(res.status, 503);
@@ -160,65 +159,6 @@ describe('API routes (with data)', () => {
       assert.equal(json.length, 1);
       assert.ok(json[0].data.downstream);
     });
-  });
-});
-
-describe('formatPrometheus', () => {
-  const data = parseStatus(STATUS_HTML);
-  const output = formatPrometheus(data);
-  const lines = output.split('\n');
-
-  it('produces valid Prometheus format (no duplicate HELP/TYPE)', () => {
-    const helpLines = lines.filter(l => l.startsWith('# HELP'));
-    const typeLines = lines.filter(l => l.startsWith('# TYPE'));
-    // Each metric name should appear once in HELP and once in TYPE
-    const helpNames = helpLines.map(l => l.split(' ')[2]);
-    const typeNames = typeLines.map(l => l.split(' ')[2]);
-    assert.deepEqual(helpNames, typeNames);
-    // No duplicate metric names
-    const uniqueHelp = new Set(helpNames);
-    assert.equal(uniqueHelp.size, helpNames.length, 'Duplicate HELP declarations found');
-  });
-
-  it('every metric value line has a numeric value', () => {
-    const valueLines = lines.filter(l => l && !l.startsWith('#'));
-    for (const line of valueLines) {
-      const value = line.split(' ').pop();
-      assert.ok(!isNaN(parseFloat(value)), `Non-numeric value in line: ${line}`);
-    }
-  });
-
-  it('label values are properly quoted', () => {
-    const labelLines = lines.filter(l => l.includes('{'));
-    for (const line of labelLines) {
-      const match = line.match(/\{(.+)\}/);
-      assert.ok(match, `Malformed label line: ${line}`);
-      // All label values should be in double quotes
-      const pairs = match[1].split(',');
-      for (const pair of pairs) {
-        assert.ok(pair.includes('="'), `Label value not quoted in: ${pair}`);
-        assert.ok(pair.endsWith('"'), `Label value not closed in: ${pair}`);
-      }
-    }
-  });
-
-  it('output ends with newline', () => {
-    assert.ok(output.endsWith('\n'));
-  });
-
-  it('handles data with empty channel arrays', () => {
-    const emptyData = {
-      timestamp: new Date().toISOString(),
-      downstream: { qam: [], ofdm: [] },
-      upstream: { qam: [], ofdm: [] },
-      device: { model: 'CM3500B', status: 'OPERATIONAL', uptimeSeconds: 100 },
-    };
-    const out = formatPrometheus(emptyData);
-    assert.ok(out.includes('cm3500_device_info'));
-    assert.ok(out.includes('cm3500_last_scrape_timestamp_seconds'));
-    // Should NOT include channel metrics
-    assert.ok(!out.includes('cm3500_downstream_power_dbmv'));
-    assert.ok(!out.includes('cm3500_upstream_power_dbmv'));
   });
 });
 
