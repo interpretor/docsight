@@ -66,6 +66,9 @@ function initChannelView() {
             if (sel) sel.value = '';
             _compareChannels = [];
             _comparePreset = null;
+            _compareState.ds = { channels: [], preset: null };
+            _compareState.us = { channels: [], preset: null };
+            _lastCompareDir = 'ds';
             switchChannelMode();
             writeChannelHash();
             return;
@@ -86,6 +89,7 @@ function initChannelView() {
             writeChannelHash();
         } else if (params.mode === 'compare') {
             if (params.dir) setPillByValue('compare-dir-tabs', params.dir);
+            _lastCompareDir = params.dir || 'ds';
             if (params.days) setPillByValue('compare-time-tabs', params.days);
             updateCompareActionLabels();
             if (params.preset === 'all') {
@@ -320,6 +324,8 @@ var _compareChannels = [];
 var _compareColors = ['#a855f7', '#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#06b6d4'];
 var _compareChannelData = null;
 var _comparePreset = null;
+var _compareState = { ds: { channels: [], preset: null }, us: { channels: [], preset: null } };
+var _lastCompareDir = 'ds';
 
 function compareColor(index) {
     if (index < _compareColors.length) return _compareColors[index];
@@ -405,14 +411,26 @@ function loadCompareChannelList(data) {
 }
 
 function onCompareDirectionChange() {
-    _comparePreset = null;
-    _compareChannels = [];
+    var oldDir = _lastCompareDir;
+    var newDir = getCompareDirection();
+    // Save current state to old direction slot
+    _compareState[oldDir] = { channels: _compareChannels.slice(), preset: _comparePreset };
+    // Restore from new direction slot
+    _compareChannels = _compareState[newDir].channels.slice();
+    _comparePreset = _compareState[newDir].preset;
+    _lastCompareDir = newDir;
     renderCompareChips();
-    var emptyEl = document.getElementById('compare-empty');
-    emptyEl.style.display = 'none';
     clearCompareCharts();
     loadCompareChannelList();
-    writeChannelHash();
+    updateCompareActionLabels();
+    if (_compareChannels.length > 0) {
+        loadCompareCharts();
+    } else {
+        var emptyEl = document.getElementById('compare-empty');
+        emptyEl.textContent = T.no_channels_selected || 'Select channels to compare';
+        emptyEl.style.display = '';
+        writeChannelHash();
+    }
 }
 window.onCompareDirectionChange = onCompareDirectionChange;
 
@@ -473,8 +491,11 @@ window.addAllCompareChannels = addAllCompareChannels;
 function clearCompareChannels() {
     _comparePreset = null;
     _compareChannels = [];
+    _compareState[_lastCompareDir] = { channels: [], preset: null };
     renderCompareChips();
-    document.getElementById('compare-empty').style.display = 'none';
+    var emptyEl = document.getElementById('compare-empty');
+    emptyEl.textContent = T.no_channels_selected || 'Select channels to compare';
+    emptyEl.style.display = '';
     clearCompareCharts();
     loadCompareChannelList();
     writeChannelHash();
