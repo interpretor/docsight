@@ -64,7 +64,6 @@
             <div class="toggle-info">
                 <span class="toggle-title">
                     {{ mod.name }}
-                    <span class="module-badge {% if mod.builtin %}badge-builtin{% else %}badge-community{% endif %}">{{ t.modules_builtin if mod.builtin else t.modules_community }}</span>
                     {% if mod.error %}<span class="module-badge badge-error">{{ t.modules_error }}</span>{% endif %}
                 </span>
                 <span class="toggle-desc">{{ mod.description }}</span>
