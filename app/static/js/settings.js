@@ -7,7 +7,7 @@
 
 /* ── Section Controller ── */
 var _currentSection = 'connection';
-var _saveHiddenSections = { support: true, modules: true, themes: true };
+var _saveHiddenSections = { support: true, themes: true };
 
 function switchSection(id) {
     _currentSection = id;
@@ -63,6 +63,15 @@ function closeMobileSidebar() {
     var backdrop = document.getElementById('sidebar-backdrop');
     if (sidebar) sidebar.classList.remove('open');
     if (backdrop) backdrop.classList.remove('active');
+}
+
+/* ── Collapsible Cards ── */
+function toggleCardCollapse(headerEl) {
+    var card = headerEl.closest('.collapsible-card');
+    if (card) {
+        card.classList.toggle('collapsed');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
 }
 
 /* ── API Token Management ── */
