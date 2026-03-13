@@ -24,6 +24,7 @@ import hashlib
 import hmac
 import logging
 import time
+from urllib.parse import urlparse, urlunparse
 
 import requests
 
@@ -62,16 +63,15 @@ class SurfboardDriver(ModemDriver):
     """
 
     def __init__(self, url: str, user: str, password: str):
+        url = self._normalize_url(url)
+        self._http_fallback_url = ""
+        self._transport_fallback_used = False
         if url.startswith("http://"):
+            self._http_fallback_url = url
             url = "https://" + url[len("http://"):]
-            log.info("SURFboard requires HTTPS, upgraded URL to %s", url)
-        # Strip trailing path (users sometimes enter .../Login.html)
-        url = url.rstrip("/")
-        from urllib.parse import urlparse, urlunparse
-        parsed = urlparse(url)
-        if parsed.path and parsed.path != "/":
-            url = urlunparse(parsed._replace(path=""))
-            log.info("SURFboard stripped path from URL: %s", url)
+            log.info("SURFboard trying HTTPS first, upgraded URL to %s", url)
+        elif url.startswith("https://"):
+            self._http_fallback_url = "http://" + url[len("https://"):]
         super().__init__(url, user, password)
         self._session = requests.Session()
         self._session.verify = False
@@ -85,6 +85,19 @@ class SurfboardDriver(ModemDriver):
         # Persists across session resets (firmware property, not session state).
         self._action_ns: str = ""
 
+    @staticmethod
+    def _normalize_url(url: str) -> str:
+        """Normalize modem base URL by removing paths, queries, and trailing slashes."""
+        parsed = urlparse(url)
+        if parsed.scheme and parsed.netloc:
+            if parsed.path or parsed.params or parsed.query or parsed.fragment:
+                url = urlunparse(
+                    parsed._replace(path="", params="", query="", fragment="")
+                )
+                log.info("SURFboard stripped path from URL: %s", url)
+            return url
+        return url.rstrip("/")
+
     def _fresh_session(self) -> None:
         """Reset HTTP session to clear stale cookies/state."""
         self._session.close()
@@ -94,6 +107,25 @@ class SurfboardDriver(ModemDriver):
         self._cookie = ""
         self._logged_in = False
         self._hmac_algo = ""
+
+    def _fallback_to_http(self) -> bool:
+        """Switch to HTTP once when HTTPS transport fails before login."""
+        if (
+            self._transport_fallback_used
+            or not self._http_fallback_url
+            or self._url == self._http_fallback_url
+        ):
+            return False
+        old_url = self._url
+        self._url = self._http_fallback_url
+        self._transport_fallback_used = True
+        self._fresh_session()
+        log.warning(
+            "SURFboard HTTPS transport failed, retrying over HTTP (%s -> %s)",
+            old_url,
+            self._url,
+        )
+        return True
 
     def login(self) -> None:
         """Two-phase HNAP login with HMAC.
@@ -121,6 +153,9 @@ class SurfboardDriver(ModemDriver):
                 self._logged_in = True
                 return
             except requests.ConnectionError:
+                if self._fallback_to_http():
+                    time.sleep(1)
+                    continue
                 conn_errors += 1
                 self._fresh_session()
                 if conn_errors >= 3:
