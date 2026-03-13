@@ -69,6 +69,7 @@ function initChannelView() {
             _compareState.ds = { channels: [], preset: null };
             _compareState.us = { channels: [], preset: null };
             _lastCompareDir = 'ds';
+            setPillByValue('compare-dir-tabs', 'ds');
             switchChannelMode();
             writeChannelHash();
             return;
