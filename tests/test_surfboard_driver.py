@@ -154,6 +154,10 @@ class TestDriverInit:
         d = SurfboardDriver("http://192.168.100.1", "admin", "pass")
         assert d._url == "https://192.168.100.1"
 
+    def test_trailing_slash_removed(self):
+        d = SurfboardDriver("https://192.168.100.1/", "admin", "pass")
+        assert d._url == "https://192.168.100.1"
+
     def test_https_preserved(self):
         d = SurfboardDriver("https://10.0.0.1", "admin", "pass")
         assert d._url == "https://10.0.0.1"
@@ -293,6 +297,25 @@ class TestLogin:
             driver.login()
 
         assert len(attempt_count) == 2
+
+    def test_login_falls_back_to_http_after_https_connection_error(self):
+        import requests as req
+
+        driver = SurfboardDriver("http://192.168.100.1/", "admin", "password")
+        urls_seen = []
+
+        def mock_do_login():
+            urls_seen.append(driver._url)
+            if driver._url.startswith("https://"):
+                raise req.ConnectionError("timeout")
+
+        with patch.object(driver, "_do_login", side_effect=mock_do_login), \
+             patch("app.drivers.surfboard.time"):
+            driver.login()
+
+        assert urls_seen == ["https://192.168.100.1", "http://192.168.100.1"]
+        assert driver._url == "http://192.168.100.1"
+        assert driver._logged_in is True
 
     def test_login_skipped_when_already_logged_in(self, driver):
         """login() is a no-op when session is already active."""
