@@ -50,44 +50,41 @@
             </div>
         </a>
 
-        <!-- Core Settings -->
+        <!-- Settings Navigation -->
         <div class="nav-group">
-            <div class="nav-group-label">{{ t.core }}</div>
             <button class="nav-item active" data-section="connection" onclick="switchSection('connection')">
                 <i data-lucide="radio" class="nav-icon"></i>
                 {{ t.step_modem }}
             </button>
-            <button class="nav-item" data-section="system" onclick="switchSection('system')">
+            <button class="nav-item" data-section="general" onclick="switchSection('general')">
                 <i data-lucide="settings" class="nav-icon"></i>
-                {{ t.system }}
+                {{ t.general }}
             </button>
             <button class="nav-item" data-section="notifications" onclick="switchSection('notifications')">
                 <i data-lucide="bell" class="nav-icon"></i>
                 {{ t.notifications }}
             </button>
-            <button class="nav-item" data-section="security" onclick="switchSection('security')">
-                <i data-lucide="shield" class="nav-icon"></i>
-                {{ t.security }}
-            </button>
             <button class="nav-item" data-section="appearance" onclick="switchSection('appearance')">
                 <i data-lucide="palette" class="nav-icon"></i>
                 {{ t.appearance }}
             </button>
-            <button class="nav-item" data-section="modules" onclick="switchSection('modules')">
+            <button class="nav-item" data-section="security" onclick="switchSection('security')">
+                <i data-lucide="shield" class="nav-icon"></i>
+                {{ t.security }}
+            </button>
+            <button class="nav-item" data-section="extensions" onclick="switchSection('extensions')">
                 <i data-lucide="package" class="nav-icon"></i>
-                {{ t.modules_title }}
+                {{ t.get('settings_extensions', 'Extensions') }}
             </button>
         </div>
 
-        <!-- Module Settings (dynamic) -->
+        <!-- Module-specific Settings (dynamic, under extensions) -->
         {% set settings_modules = [] %}
         {% for mod in modules if mod.template_paths.get('settings') %}
             {% if settings_modules.append(mod) %}{% endif %}
         {% endfor %}
         {% if settings_modules %}
-        <div class="nav-separator"></div>
         <div class="nav-group">
-            <div class="nav-group-label">{{ t.modules }}</div>
             {% for mod in settings_modules|sort(attribute='name') %}
             <button class="nav-item" data-section="mod-{{ mod.id|replace('.', '_') }}" onclick="switchSection('mod-{{ mod.id|replace('.', '_') }}')">
                 <i data-lucide="{{ mod.menu.get('icon', 'puzzle') }}" class="nav-icon"></i>
@@ -147,11 +144,11 @@
             {% endif %}
 
             {% include 'settings/connection.html' %}
-            {% include 'settings/system.html' %}
+            {% include 'settings/general.html' %}
             {% include 'settings/notifications.html' %}
-            {% include 'settings/security.html' %}
             {% include 'settings/appearance.html' %}
-            {% include 'settings/modules.html' %}
+            {% include 'settings/security.html' %}
+            {% include 'settings/extensions.html' %}
             {% include 'settings/support.html' %}
 
             {# ── Module Settings Panels ── #}
@@ -178,11 +175,11 @@
 var T = {{ t|tojson }};
 var SECTION_TITLES = {
     connection: T.step_modem || 'Connection',
-    system: T.get ? (T.get('system') || 'System') : 'System',
+    general: T.general || 'General',
     notifications: T.get ? (T.get('notifications') || 'Notifications') : 'Notifications',
-    security: T.get ? (T.get('security') || 'Security') : 'Security',
     appearance: T.appearance || 'Appearance',
-    modules: T.modules_title || 'Module Store',
+    security: T.get ? (T.get('security') || 'Security') : 'Security',
+    extensions: T.get ? (T.get('settings_extensions') || 'Extensions') : 'Extensions',
     support: T.support_title || 'Support DOCSight'
 };
 {% for mod in modules if mod.template_paths.get('settings') %}
