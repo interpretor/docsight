@@ -245,44 +245,39 @@ Works with any DOCSIS cable provider worldwide. Non-cable users can select Gener
 
 DOCSight uses a **modular collector-based architecture** for reliable data gathering from multiple sources:
 
+```mermaid
+flowchart TD
+    subgraph CR["Collector Registry"]
+        MC["Modem Collector"]
+        DC["Demo Collector"]
+        SC["Speedtest Collector"]
+        BC["BQM Collector"]
+        SP["Smokeping Proxy"]
+        BN["BNetzA Watcher"]
+        BK["Backup Collector"]
+    end
+
+    MC --> BASE
+    DC --> BASE
+    SC --> BASE
+    BC --> BASE
+    SP --> BASE
+    BN --> BASE
+    BK --> BASE
+
+    BASE["Base Collector (Fail Safe)<br/>Exponential backoff<br/>Auto reset after idle<br/>Health status monitoring"]
+    BASE --> EVT["Event Detector<br/>Anomaly detection and alerting"]
+    EVT --> STORE["SQLite Storage + MQTT<br/>Snapshots, trends, Home Assistant"]
+    STORE --> UI["Web UI (Flask)<br/>Dashboard, charts, reports"]
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                             Collector Registry                              │
-│                                                                             │
-│  ┌──────────┐┌──────────┐┌──────────┐┌──────────┐┌──────────┐┌──────────┐┌──────────┐│
-│  │  Modem   ││   Demo   ││ Speedtest││   BQM    ││Smokeping ││  BNetzA  ││  Backup  ││
-│  │ Collector││ Collector││ Collector││ Collector││  (Proxy) ││ Watcher  ││ Collector││
-│  └────┬─────┘└────┬─────┘└────┬─────┘└────┬─────┘└────┬─────┘└────┬─────┘└────┬─────┘│
-│       │           │           │           │           │           │           │      │
-│       └───────────┴───────────┴───────────┴───────────┴───────────┴───────────┘      │
-│                                     │                                       │
-│                                     ▼                                       │
-│         ┌──────────────────────────────────────────────────────────┐        │
-│         │                Base Collector (Fail Safe)                │        │
-│         │   • Exponential backoff (30s → 3600s max)                │        │
-│         │   • Auto reset after 24h idle                            │        │
-│         │   • Health status monitoring                             │        │
-│         └──────────────────────────────────────────────────────────┘        │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                      │
-                                      ▼
-                ┌────────────────────────────────────┐
-                │           Event Detector           │
-                │   (Anomaly detection & alerting)   │
-                └────────────────┬───────────────────┘
-                                 │
-                                 ▼
-                ┌────────────────────────────────────┐
-                │        SQLite Storage + MQTT       │
-                │  (Snapshots, trends, Home Assistant)│
-                └────────────────┬───────────────────┘
-                                 │
-                                 ▼
-                ┌────────────────────────────────────┐
-                │           Web UI (Flask)           │
-                │    (Dashboard, charts, reports)    │
-                └────────────────────────────────────┘
-```
+
+Architecture layers:
+
+- `Collectors`: modem, demo, speedtest, BQM, Smokeping, BNetzA, and backup inputs
+- `Base Collector`: shared fail-safe behavior like backoff, reset, and health handling
+- `Event Detector`: turns raw state changes into anomaly and alert events
+- `Storage + MQTT`: persists snapshots and exposes data to Home Assistant
+- `Web UI`: presents dashboards, trends, reports, and complaint workflows
 
 See [`ARCHITECTURE.md`](ARCHITECTURE.md) for detailed technical documentation.
 
