@@ -74,3 +74,58 @@ class TestThemeContext:
         finally:
             web._module_loader = old_loader
             web._config_manager = old_config
+
+    def test_theme_collections_are_grouped_for_gallery(self):
+        """Theme gallery collections group signature, community, and playful themes."""
+        from app import web
+
+        signature = ModuleInfo(
+            id="docsight.theme_classic", name="Classic", description="d",
+            version="1.0.0", author="a", min_app_version="2026.2",
+            type="theme", contributes={"theme": "theme.json"}, path="/tmp",
+            theme_data={"dark": {"--bg": "#111"}, "light": {"--bg": "#fff"}},
+        )
+        community = ModuleInfo(
+            id="docsight.theme_tokyo_night", name="Tokyo Night", description="d",
+            version="1.0.0", author="a", min_app_version="2026.2",
+            type="theme", contributes={"theme": "theme.json"}, path="/tmp",
+            theme_data={"dark": {"--bg": "#111"}, "light": {"--bg": "#fff"}},
+        )
+        playful = ModuleInfo(
+            id="docsight.theme_matrix", name="Matrix", description="d",
+            version="1.0.0", author="a", min_app_version="2026.2",
+            type="theme", contributes={"theme": "theme.json"}, path="/tmp",
+            theme_data={"dark": {"--bg": "#111"}, "light": {"--bg": "#fff"}},
+        )
+
+        class FakeLoader:
+            def get_enabled_modules(self):
+                return [signature]
+            def get_theme_modules(self):
+                return [playful, community, signature]
+
+        class FakeConfig:
+            def get(self, key, default=""):
+                if key == "active_theme":
+                    return "docsight.theme_classic"
+                return default
+
+        old_loader = web._module_loader
+        old_config = web._config_manager
+        try:
+            web._module_loader = FakeLoader()
+            web._config_manager = FakeConfig()
+
+            with web.app.test_request_context("/settings"):
+                ctx = web.inject_auth()
+                assert [c["key"] for c in ctx["theme_collections"]] == [
+                    "signature",
+                    "community",
+                    "playful",
+                ]
+                assert [m.id for m in ctx["theme_collections"][1]["modules"]] == [
+                    "docsight.theme_tokyo_night",
+                ]
+        finally:
+            web._module_loader = old_loader
+            web._config_manager = old_config

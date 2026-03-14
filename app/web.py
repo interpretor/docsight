@@ -43,6 +43,83 @@ def _server_tz_info():
 log = logging.getLogger("docsis.web")
 audit_log = logging.getLogger("docsis.audit")
 
+_THEME_COLLECTIONS = [
+    {
+        "key": "signature",
+        "title_key": "theme_collection_signature",
+        "title_fallback": "Signature Themes",
+        "description_key": "theme_collection_signature_desc",
+        "description_fallback": "DOCSight's built-in identity themes",
+        "ids": (
+            "docsight.theme_classic",
+            "docsight.theme_tribu",
+            "docsight.theme_ocean",
+        ),
+    },
+    {
+        "key": "community",
+        "title_key": "theme_collection_community",
+        "title_fallback": "Community Favorites",
+        "description_key": "theme_collection_community_desc",
+        "description_fallback": "Popular palettes inspired by widely loved developer themes",
+        "ids": (
+            "docsight.theme_one_dark",
+            "docsight.theme_dracula",
+            "docsight.theme_catppuccin_mocha",
+            "docsight.theme_tokyo_night",
+            "docsight.theme_nord",
+            "docsight.theme_synthwave",
+            "docsight.theme_gruvbox",
+        ),
+    },
+    {
+        "key": "playful",
+        "title_key": "theme_collection_playful",
+        "title_fallback": "Easter Eggs",
+        "description_key": "theme_collection_playful_desc",
+        "description_fallback": "Delight-first themes for fun installs and screenshots",
+        "ids": (
+            "docsight.theme_matrix",
+            "docsight.theme_amber_terminal",
+            "docsight.theme_gameboy",
+            "docsight.theme_doom",
+        ),
+    },
+]
+
+_THEME_COLLECTION_INDEX = {
+    theme_id: (collection["key"], position)
+    for collection in _THEME_COLLECTIONS
+    for position, theme_id in enumerate(collection["ids"])
+}
+
+
+def _build_theme_collections(theme_modules):
+    """Group theme modules into curated gallery collections."""
+    grouped = {collection["key"]: [] for collection in _THEME_COLLECTIONS}
+
+    for mod in theme_modules:
+        collection_key = _THEME_COLLECTION_INDEX.get(mod.id, ("community", 999))[0]
+        grouped.setdefault(collection_key, []).append(mod)
+
+    collections = []
+    for collection in _THEME_COLLECTIONS:
+        modules = grouped.get(collection["key"], [])
+        if not modules:
+            continue
+        modules.sort(
+            key=lambda mod: (
+                _THEME_COLLECTION_INDEX.get(mod.id, (collection["key"], 999))[1],
+                mod.name.lower(),
+            )
+        )
+        collections.append({
+            **collection,
+            "modules": modules,
+        })
+
+    return collections
+
 # ── Login rate limiting (in-memory) ──
 _login_attempts = {}  # IP -> [timestamp, ...]
 _LOGIN_MAX_ATTEMPTS = 5
@@ -542,6 +619,7 @@ def inject_auth():
         m for m in (_module_loader.get_theme_modules() if _module_loader else [])
         if m.theme_data
     ]
+    theme_collections = _build_theme_collections(all_theme_modules)
 
     return {
         "auth_enabled": auth_enabled,
@@ -549,6 +627,7 @@ def inject_auth():
         "update_available": _check_for_update(),
         "modules": modules,
         "all_theme_modules": all_theme_modules,
+        "theme_collections": theme_collections,
         "active_theme_data": active_theme_data,
         "active_theme_id": active_theme_id,
     }
