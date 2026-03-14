@@ -82,6 +82,21 @@ Open `http://localhost:8765`, enter your router login, done.
 
 ---
 
+## From Suspicion to Evidence
+
+Most connection problems aren't one-time events. They come and go, making them nearly impossible to prove when you call your ISP.
+
+DOCSight runs in the background and builds your case over time:
+
+- **Hour 1** - You see your current signal health and any active issues
+- **Week 1** - Trend charts reveal patterns your ISP can't see from a single snapshot
+- **Month 1** - The event log, incident journal, and correlation analysis paint a complete picture
+- **When you call your ISP** - The complaint generator turns weeks of evidence into a professional letter with attached diagnostics
+
+The longer DOCSight runs, the stronger your evidence gets.
+
+---
+
 ## Is This For Me?
 
 | | |
